@@ -1,0 +1,29 @@
+# OS / editor
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local env/config
+.env
+.env.*
+!.env.example
+backend/src/main/resources/application-local.yml
+
+# Java / Maven (backend)
+backend/target/
+*.class
+
+# Frontend (if Node-based)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.nuxt/
+frontend/.cache/
+frontend/coverage/

@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/notif
+    username: notif
+    password: notif
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: notif
+    password: notif
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
