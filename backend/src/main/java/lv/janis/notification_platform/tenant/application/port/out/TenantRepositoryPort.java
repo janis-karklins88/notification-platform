@@ -3,6 +3,9 @@ package lv.janis.notification_platform.tenant.application.port.out;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import lv.janis.notification_platform.tenant.domain.Tenant;
 
 public interface TenantRepositoryPort {
@@ -13,4 +16,6 @@ public interface TenantRepositoryPort {
   Optional<Tenant> findBySlug(String slug);
 
   boolean existsBySlug(String slug);
+
+  Page<Tenant> findAll(Pageable pageable);
 }

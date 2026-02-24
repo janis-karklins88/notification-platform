@@ -3,6 +3,8 @@ package lv.janis.notification_platform.tenant.adapter.out.persistence;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import lv.janis.notification_platform.tenant.application.port.out.TenantRepositoryPort;
@@ -34,5 +36,10 @@ public class TenantRepositoryAdapter implements TenantRepositoryPort {
   @Override
   public boolean existsBySlug(String slug) {
     return tenantJpaRepository.existsBySlug(slug);
+  }
+
+  @Override
+  public Page<Tenant> findAll(Pageable pageable) {
+    return tenantJpaRepository.findAll(pageable);
   }
 }
