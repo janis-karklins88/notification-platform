@@ -17,5 +17,5 @@ public interface TenantRepositoryPort {
 
   boolean existsBySlug(String slug);
 
-  Page<Tenant> findAll(Pageable pageable);
+  Page<Tenant> findAll(TenantFilter filter, Pageable pageable);
 }

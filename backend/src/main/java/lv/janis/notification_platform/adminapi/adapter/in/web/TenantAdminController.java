@@ -1,9 +1,11 @@
 package lv.janis.notification_platform.adminapi.adapter.in.web;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -23,7 +25,9 @@ import lv.janis.notification_platform.adminapi.adapter.in.web.dto.TenantResponse
 import lv.janis.notification_platform.adminapi.application.port.in.CreateTenantCommand;
 import lv.janis.notification_platform.adminapi.application.port.in.CreateTenantUseCase;
 import lv.janis.notification_platform.adminapi.application.port.in.ListTenantUseCase;
+import lv.janis.notification_platform.adminapi.application.port.in.ListTenantsQuery;
 import lv.janis.notification_platform.tenant.domain.Tenant;
+import lv.janis.notification_platform.tenant.domain.TenantStatus;
 
 
 @RestController
@@ -53,8 +57,14 @@ public class TenantAdminController {
   @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'TENANT_ADMIN')")
   public ResponseEntity<PageResponse<TenantResponse>> getTenants(
       @RequestParam(defaultValue = "0") @Min(0) int page,
-      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-    Page<Tenant> tenantsPage = listTenantUseCase.listTenants(page, size);
+      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+      @RequestParam(required = false) TenantStatus status,
+      @RequestParam(required = false) String nameContains,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdFrom,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdTo) {
+    Page<Tenant> tenantsPage = listTenantUseCase.listTenants(
+        new ListTenantsQuery(page, size, status, nameContains, createdFrom, createdTo)
+    );
     List<TenantResponse> tenants = tenantsPage.getContent().stream()
         .map(TenantResponse::from)
         .toList();

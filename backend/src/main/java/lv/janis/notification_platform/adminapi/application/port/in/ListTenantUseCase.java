@@ -5,5 +5,5 @@ import org.springframework.data.domain.Page;
 import lv.janis.notification_platform.tenant.domain.Tenant;
 
 public interface ListTenantUseCase {
-  Page<Tenant> listTenants(int page, int size);
+  Page<Tenant> listTenants(ListTenantsQuery query);
 }
