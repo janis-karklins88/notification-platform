@@ -22,11 +22,7 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 
 @Entity
-@Table(
-    name = "tenant",
-    uniqueConstraints = @UniqueConstraint(name = "uk_tenant_slug", columnNames = "slug"),
-    indexes = @Index(name = "idx_tenant_status", columnList = "status")
-)
+@Table(name = "tenant", uniqueConstraints = @UniqueConstraint(name = "uk_tenant_slug", columnNames = "slug"), indexes = @Index(name = "idx_tenant_status", columnList = "status"))
 @EntityListeners(AuditingEntityListener.class)
 public class Tenant {
 
@@ -62,7 +58,7 @@ public class Tenant {
 
   public Tenant(String slug, String name, TenantStatus status) {
     this.slug = Objects.requireNonNull(slug, "slug must not be null");
-    this.name = Objects.requireNonNull(name, "name must not be null");
+    this.name = normalizeName(name);
     this.status = Objects.requireNonNull(status, "status must not be null");
   }
 
@@ -95,10 +91,18 @@ public class Tenant {
   }
 
   public void rename(String name) {
-    this.name = Objects.requireNonNull(name, "name must not be null");
+    this.name = normalizeName(name);
   }
 
   public void changeStatus(TenantStatus status) {
     this.status = Objects.requireNonNull(status, "status must not be null");
+  }
+
+  private static String normalizeName(String name) {
+    String normalized = Objects.requireNonNull(name, "name must not be null").trim();
+    if (normalized.isEmpty()) {
+      throw new IllegalArgumentException("name must not be blank");
+    }
+    return normalized;
   }
 }
