@@ -4,9 +4,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import lv.janis.notification_platform.auth.domain.ApiKey;
 
-public interface ApiKeyJpaRepository extends JpaRepository<ApiKey, UUID> {
+public interface ApiKeyJpaRepository extends JpaRepository<ApiKey, UUID>, JpaSpecificationExecutor<ApiKey> {
   Optional<ApiKey> findByKeyHash(String keyHash);
 }

@@ -54,7 +54,7 @@ public class TenantAdminController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'TENANT_ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<TenantResponse> createTenant(@Valid @RequestBody CreateTenantRequest request) {
         Tenant tenant = createTenantUseCase.createTenant(
                 new CreateTenantCommand(request.slug(), request.name(), request.status()));
@@ -65,7 +65,7 @@ public class TenantAdminController {
     }
 
     @PatchMapping("/{tenantId}")
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'TENANT_ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<TenantResponse> editTenant(@PathVariable UUID tenantId,
             @Valid @RequestBody EditTenantRequest request) {
         Tenant tenant = editTenantByIdUseCase
@@ -74,7 +74,7 @@ public class TenantAdminController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'TENANT_ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<PageResponse<TenantResponse>> getTenants(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
@@ -100,7 +100,7 @@ public class TenantAdminController {
     }
 
     @GetMapping("/{tenantId}")
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'TENANT_ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<TenantResponse> getTenantById(@PathVariable UUID tenantId) {
         Tenant tenant = getTenantByIdUseCase.getTenantById(tenantId);
         return ResponseEntity.ok(TenantResponse.from(tenant));
