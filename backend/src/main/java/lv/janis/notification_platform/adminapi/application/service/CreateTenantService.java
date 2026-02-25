@@ -1,13 +1,13 @@
 package lv.janis.notification_platform.adminapi.application.service;
 
-
 import java.util.Locale;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lv.janis.notification_platform.adminapi.application.exception.DuplicateTenantSlugException;
+import lv.janis.notification_platform.adminapi.application.exception.BadRequestException;
+import lv.janis.notification_platform.adminapi.application.exception.ConflictException;
 import lv.janis.notification_platform.adminapi.application.port.in.CreateTenantCommand;
 import lv.janis.notification_platform.adminapi.application.port.in.CreateTenantUseCase;
 import lv.janis.notification_platform.tenant.application.port.out.TenantRepositoryPort;
@@ -30,7 +30,7 @@ public class CreateTenantService implements CreateTenantUseCase {
     TenantStatus status = command.status() == null ? TenantStatus.ACTIVE : command.status();
 
     if (tenantRepositoryPort.existsBySlug(slug)) {
-      throw new DuplicateTenantSlugException(slug);
+      throw ConflictException.of("Tenant slug already exists: " + slug);
     }
 
     Tenant tenant = new Tenant(slug, name, status);
@@ -40,7 +40,7 @@ public class CreateTenantService implements CreateTenantUseCase {
   private static String normalizeSlug(String slug) {
     String normalized = Objects.requireNonNull(slug, "slug must not be null").trim().toLowerCase(Locale.ROOT);
     if (normalized.isEmpty()) {
-      throw new IllegalArgumentException("slug must not be blank");
+      throw new BadRequestException("slug must not be blank");
     }
     return normalized;
   }
@@ -48,7 +48,7 @@ public class CreateTenantService implements CreateTenantUseCase {
   private static String normalizeName(String name) {
     String normalized = Objects.requireNonNull(name, "name must not be null").trim();
     if (normalized.isEmpty()) {
-      throw new IllegalArgumentException("name must not be blank");
+      throw new BadRequestException("name must not be blank");
     }
     return normalized;
   }
