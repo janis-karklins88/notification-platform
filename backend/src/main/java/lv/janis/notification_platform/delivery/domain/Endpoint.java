@@ -4,9 +4,13 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,13 +29,10 @@ import jakarta.persistence.Version;
 import lv.janis.notification_platform.tenant.domain.Tenant;
 
 @Entity
-@Table(
-    name = "endpoint",
-    indexes = {
-        @Index(name = "idx_endpoint_tenant_id", columnList = "tenant_id"),
-        @Index(name = "idx_endpoint_status", columnList = "status")
-    }
-)
+@Table(name = "endpoint", indexes = {
+    @Index(name = "idx_endpoint_tenant_id", columnList = "tenant_id"),
+    @Index(name = "idx_endpoint_status", columnList = "status")
+})
 @EntityListeners(AuditingEntityListener.class)
 public class Endpoint {
 
@@ -48,8 +49,9 @@ public class Endpoint {
   @Column(nullable = false, length = 32)
   private EndpointType type;
 
-  @Column(length = 255)
-  private String url;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(columnDefinition = "jsonb", nullable = false)
+  private JsonNode config;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 32)
@@ -70,10 +72,10 @@ public class Endpoint {
   protected Endpoint() {
   }
 
-  public Endpoint(Tenant tenant, EndpointType type, String url) {
+  public Endpoint(Tenant tenant, EndpointType type, JsonNode config) {
     this.tenant = Objects.requireNonNull(tenant, "tenant must not be null");
     this.type = Objects.requireNonNull(type, "type must not be null");
-    this.url = url;
+    this.config = Objects.requireNonNull(config, "config must not be null");
     this.status = EndpointStatus.ACTIVE;
   }
 
@@ -89,8 +91,8 @@ public class Endpoint {
     return type;
   }
 
-  public String getUrl() {
-    return url;
+  public JsonNode getConfig() {
+    return config;
   }
 
   public EndpointStatus getStatus() {
@@ -109,8 +111,8 @@ public class Endpoint {
     return updatedAt;
   }
 
-  public void setUrl(String url) {
-    this.url = url;
+  public void setConfig(JsonNode config) {
+    this.config = Objects.requireNonNull(config, "config must not be null");
   }
 
   public void activate() {
@@ -122,6 +124,6 @@ public class Endpoint {
   }
 
   public void delete() {
-    this.status = EndpointStatus.DELETED;
+    this.status = EndpointStatus.DISABLED;
   }
 }

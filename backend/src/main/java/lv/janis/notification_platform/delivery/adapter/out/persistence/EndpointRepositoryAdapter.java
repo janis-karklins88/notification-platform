@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
+import lv.janis.notification_platform.delivery.application.port.out.EndpointFilter;
 import lv.janis.notification_platform.delivery.application.port.out.EndpointRepositoryPort;
 import lv.janis.notification_platform.delivery.domain.Endpoint;
 import lv.janis.notification_platform.delivery.domain.EndpointStatus;
@@ -26,6 +30,29 @@ public class EndpointRepositoryAdapter implements EndpointRepositoryPort {
   @Override
   public Optional<Endpoint> findById(UUID id) {
     return endpointJpaRepository.findById(id);
+  }
+
+  @Override
+  public Page<Endpoint> findAll(EndpointFilter filter, Pageable pageable) {
+    Specification<Endpoint> spec = (root, query, cb) -> cb.conjunction();
+
+    if (filter.tenantId() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("tenant").get("id"), filter.tenantId()));
+    }
+    if (filter.status() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), filter.status()));
+    }
+    if (filter.type() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("type"), filter.type()));
+    }
+    if (filter.createdFrom() != null) {
+      spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), filter.createdFrom()));
+    }
+    if (filter.createdTo() != null) {
+      spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), filter.createdTo()));
+    }
+
+    return endpointJpaRepository.findAll(spec, pageable);
   }
 
   @Override
