@@ -93,4 +93,22 @@ public class EndpointService implements EndpointUseCase {
     endpoint.deactivate();
     endpointRepositoryPort.save(endpoint);
   }
+
+  @Override
+  @Transactional
+  public void reactivateEndpoint(UUID endpointId) {
+    var endpoint = endpointRepositoryPort.findById(endpointId)
+        .orElseThrow(() -> new NotFoundException("Endpoint with " + endpointId + " not found"));
+    endpoint.activate();
+    endpointRepositoryPort.save(endpoint);
+  }
+
+  @Override
+  @Transactional
+  public void deleteEndpoint(UUID endpointId) {
+    var endpoint = endpointRepositoryPort.findById(endpointId)
+        .orElseThrow(() -> new NotFoundException("Endpoint with " + endpointId + " not found"));
+    endpoint.delete();
+    endpointRepositoryPort.save(endpoint);
+  }
 }

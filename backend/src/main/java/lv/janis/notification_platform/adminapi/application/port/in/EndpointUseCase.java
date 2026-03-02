@@ -16,4 +16,8 @@ public interface EndpointUseCase {
   Endpoint updateEndpoint(UpdateEndpointCommand command);
 
   void deactivateEndpoint(UUID endpointId);
+
+  void deleteEndpoint(UUID endpointId);
+
+  void reactivateEndpoint(UUID endpointId);
 }

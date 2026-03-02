@@ -77,6 +77,20 @@ public class EndpointAdminController {
     return ResponseEntity.noContent().build();
   }
 
+  @PostMapping("/endpoints/{endpointId}/delete")
+  @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+  public ResponseEntity<Void> deleteEndpoint(@PathVariable UUID endpointId) {
+    endpointUseCase.deleteEndpoint(endpointId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/endpoints/{endpointId}/reactivate")
+  @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+  public ResponseEntity<Void> reactivateEndpoint(@PathVariable UUID endpointId) {
+    endpointUseCase.reactivateEndpoint(endpointId);
+    return ResponseEntity.noContent().build();
+  }
+
   @GetMapping("/endpoints")
   @PreAuthorize("hasRole('PLATFORM_ADMIN')")
   public ResponseEntity<PageResponse<EndpointResponse>> listEndpoints(
