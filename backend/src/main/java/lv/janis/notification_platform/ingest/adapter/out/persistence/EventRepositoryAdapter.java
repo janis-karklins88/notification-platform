@@ -30,4 +30,9 @@ public class EventRepositoryAdapter implements EventRepositoryPort {
   public Optional<Event> findByTenantIdAndIdempotencyKey(UUID tenantId, String idempotencyKey) {
     return eventJpaRepository.findByTenant_IdAndIdempotencyKey(tenantId, idempotencyKey);
   }
+
+  @Override
+  public Optional<Event> findByIdAndTenantId(UUID id, UUID tenantId) {
+    return eventJpaRepository.findByIdAndTenant_Id(id, tenantId);
+  }
 }

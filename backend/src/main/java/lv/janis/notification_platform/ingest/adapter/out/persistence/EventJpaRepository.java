@@ -9,4 +9,6 @@ import lv.janis.notification_platform.ingest.domain.Event;
 
 public interface EventJpaRepository extends JpaRepository<Event, UUID> {
   Optional<Event> findByTenant_IdAndIdempotencyKey(UUID tenantId, String idempotencyKey);
+
+  Optional<Event> findByIdAndTenant_Id(UUID id, UUID tenantId);
 }

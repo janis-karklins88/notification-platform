@@ -11,4 +11,6 @@ public interface EventRepositoryPort {
   Optional<Event> findById(UUID id);
 
   Optional<Event> findByTenantIdAndIdempotencyKey(UUID tenantId, String idempotencyKey);
+
+  Optional<Event> findByIdAndTenantId(UUID id, UUID tenantId);
 }

@@ -1,0 +1,67 @@
+package lv.janis.notification_platform.ingest.application.service;
+
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import lv.janis.notification_platform.adminapi.application.exception.NotFoundException;
+import lv.janis.notification_platform.ingest.application.port.in.IngestCommand;
+import lv.janis.notification_platform.ingest.application.port.in.IngestResult;
+import lv.janis.notification_platform.ingest.application.port.in.IngestUseCase;
+import lv.janis.notification_platform.ingest.application.port.out.EventRepositoryPort;
+import lv.janis.notification_platform.ingest.domain.Event;
+import lv.janis.notification_platform.tenant.application.port.out.TenantRepositoryPort;
+
+@Service
+public class IngestService implements IngestUseCase {
+  private final EventRepositoryPort eventRepositoryPort;
+  private final TenantRepositoryPort tenantRepositoryPort;
+
+  public IngestService(EventRepositoryPort eventRepositoryPort, TenantRepositoryPort tenantRepositoryPort) {
+    this.eventRepositoryPort = eventRepositoryPort;
+    this.tenantRepositoryPort = tenantRepositoryPort;
+  }
+
+  @Override
+  @Transactional
+  public IngestResult ingest(IngestCommand command) {
+    String normalizedIdempotencyKey = normalizeOptional(command.idempotencyKey());
+
+    if (normalizedIdempotencyKey != null) {
+      var existing = eventRepositoryPort.findByTenantIdAndIdempotencyKey(command.tenantId(), normalizedIdempotencyKey);
+      if (existing.isPresent()) {
+        var event = existing.get();
+        return new IngestResult(event.getId(), event.getStatus(), true);
+      }
+    }
+
+    var tenant = tenantRepositoryPort.findById(command.tenantId())
+        .orElseThrow(() -> new NotFoundException("Tenant not found: " + command.tenantId()));
+
+    Event event = new Event(
+        tenant,
+        command.eventType(),
+        normalizedIdempotencyKey,
+        command.payload(),
+        command.source(),
+        command.traceId());
+
+    Event saved = eventRepositoryPort.save(event);
+    return new IngestResult(saved.getId(), saved.getStatus(), false);
+  }
+
+  @Override
+  public Event getEventById(UUID tenantId, UUID eventId) {
+    return eventRepositoryPort.findByIdAndTenantId(eventId, tenantId)
+        .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+  }
+
+  private String normalizeOptional(String value) {
+    if (!StringUtils.hasText(value)) {
+      return null;
+    }
+    return value.trim();
+  }
+}

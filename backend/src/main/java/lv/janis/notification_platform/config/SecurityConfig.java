@@ -21,8 +21,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.core.annotation.Order;
+
+import lv.janis.notification_platform.auth.adapter.in.security.ApiKeyAuthenticationFilter;
 
 @Configuration
 @EnableMethodSecurity
@@ -53,6 +57,19 @@ public class SecurityConfig {
 
   @Bean
   @Order(2)
+  SecurityFilterChain ingestSecurity(HttpSecurity http, ApiKeyAuthenticationFilter apiKeyAuthenticationFilter)
+      throws Exception {
+    return http
+        .securityMatcher("/ingest/**")
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+        .addFilterBefore(apiKeyAuthenticationFilter, AnonymousAuthenticationFilter.class)
+        .build();
+  }
+
+  @Bean
+  @Order(3)
   SecurityFilterChain appSecurity(HttpSecurity http) throws Exception {
     return http
         .csrf(AbstractHttpConfigurer::disable)
