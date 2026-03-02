@@ -2,7 +2,6 @@ package lv.janis.notification_platform.adminapi.adapter.in.web;
 
 import java.net.URI;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -59,20 +58,8 @@ public class ApiKeyAdminController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdTo) {
 
     var query = new ListApiKeyQuery(page, size, tenantId, status, prefix, createdFrom, createdTo);
-
     Page<ApiKey> apiKeys = apiKeyUseCase.listApiKeys(query);
-
-    List<ApiKeyListResponse> content = apiKeys.getContent().stream()
-        .map(ApiKeyListResponse::from)
-        .toList();
-    return ResponseEntity.ok(new PageResponse<>(
-        content,
-        apiKeys.getNumber(),
-        apiKeys.getSize(),
-        apiKeys.getTotalElements(),
-        apiKeys.getTotalPages(),
-        apiKeys.hasNext(),
-        apiKeys.hasPrevious()));
+    return ResponseEntity.ok(PageResponse.from(apiKeys, ApiKeyListResponse::from));
   }
 
   @PostMapping("/api-keys/{apiKeyId}/revoke")

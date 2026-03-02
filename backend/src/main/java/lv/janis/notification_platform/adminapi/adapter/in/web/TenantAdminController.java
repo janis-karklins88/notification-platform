@@ -2,7 +2,6 @@ package lv.janis.notification_platform.adminapi.adapter.in.web;
 
 import java.net.URI;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -84,19 +83,7 @@ public class TenantAdminController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdTo) {
         Page<Tenant> tenantsPage = listTenantUseCase.listTenants(
                 new ListTenantsQuery(page, size, status, nameContains, createdFrom, createdTo));
-        List<TenantResponse> tenants = tenantsPage.getContent().stream()
-                .map(TenantResponse::from)
-                .toList();
-
-        return ResponseEntity.ok(
-                new PageResponse<>(
-                        tenants,
-                        tenantsPage.getNumber(),
-                        tenantsPage.getSize(),
-                        tenantsPage.getTotalElements(),
-                        tenantsPage.getTotalPages(),
-                        tenantsPage.hasNext(),
-                        tenantsPage.hasPrevious()));
+        return ResponseEntity.ok(PageResponse.from(tenantsPage, TenantResponse::from));
     }
 
     @GetMapping("/{tenantId}")

@@ -118,6 +118,10 @@ public class Subscription {
     this.status = SubscriptionStatus.ACTIVE;
   }
 
+  public void delete() {
+    this.status = SubscriptionStatus.DELETED;
+  }
+
   private static String normalizeEventType(String eventType) {
     String normalized = Objects.requireNonNull(eventType, "eventType must not be null").trim();
     if (normalized.isEmpty()) {

@@ -2,7 +2,6 @@ package lv.janis.notification_platform.adminapi.adapter.in.web;
 
 import java.net.URI;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -105,17 +104,6 @@ public class EndpointAdminController {
     var query = new ListEndpointQuery(page, size, tenantId, status, type, createdFrom, createdTo);
 
     Page<Endpoint> endpoints = endpointUseCase.listEndpoints(query);
-
-    List<EndpointResponse> content = endpoints.getContent().stream()
-        .map(EndpointResponse::from)
-        .toList();
-    return ResponseEntity.ok(new PageResponse<>(
-        content,
-        endpoints.getNumber(),
-        endpoints.getSize(),
-        endpoints.getTotalElements(),
-        endpoints.getTotalPages(),
-        endpoints.hasNext(),
-        endpoints.hasPrevious()));
+    return ResponseEntity.ok(PageResponse.from(endpoints, EndpointResponse::from));
   }
 }

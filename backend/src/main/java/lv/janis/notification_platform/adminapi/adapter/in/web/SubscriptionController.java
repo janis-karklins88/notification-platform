@@ -1,8 +1,7 @@
 package lv.janis.notification_platform.adminapi.adapter.in.web;
 
+import java.net.URI;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -45,17 +44,19 @@ public class SubscriptionController {
   @PreAuthorize("hasRole('PLATFORM_ADMIN')")
   public ResponseEntity<SubscriptionResponse> createSubscription(@PathVariable UUID tenantId,
       @Valid @RequestBody CreateSubscriptionRequest request) {
-    var command = new CreateSubscriptionCommand(tenantId, request.enventType(), request.endpointId());
+    var command = new CreateSubscriptionCommand(tenantId, request.eventType(), request.endpointId());
     var result = subscriptionUseCase.createSubscription(command);
-    return ResponseEntity.created(null).body(SubscriptionResponse.from(result));
+    return ResponseEntity
+        .created(URI.create("/admin/tenants/" + tenantId + "/subscriptions/" + result.getId()))
+        .body(SubscriptionResponse.from(result));
   }
 
   @GetMapping("/tenants/{tenantId}/subscriptions")
   @PreAuthorize("hasRole('PLATFORM_ADMIN')")
   public ResponseEntity<PageResponse<SubscriptionResponse>> listSubscriptions(
+      @PathVariable UUID tenantId,
       @RequestParam(defaultValue = "0") @Min(0) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-      @RequestParam(required = false) UUID tenantId,
       @RequestParam(required = false) String eventType,
       @RequestParam(required = false) UUID endpointId,
       @RequestParam(required = false) SubscriptionStatus status,
@@ -64,16 +65,7 @@ public class SubscriptionController {
     var query = new ListSubscriptionsQuery(tenantId, eventType, endpointId, status, createdAfter, createdBefore, page,
         size);
     Page<Subscription> result = subscriptionUseCase.listSubscriptions(query);
-    List<SubscriptionResponse> response = result.getContent().stream().map(SubscriptionResponse::from).toList();
-    return ResponseEntity.ok(
-        new PageResponse<>(
-            response,
-            result.getNumber(),
-            result.getSize(),
-            result.getTotalElements(),
-            result.getTotalPages(),
-            result.hasNext(),
-            result.hasPrevious()));
+    return ResponseEntity.ok(PageResponse.from(result, SubscriptionResponse::from));
   }
 
   @PostMapping("/subscriptions/{subscriptionId}/deactivate")
