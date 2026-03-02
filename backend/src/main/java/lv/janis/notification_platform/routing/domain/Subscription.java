@@ -27,17 +27,11 @@ import lv.janis.notification_platform.delivery.domain.Endpoint;
 import lv.janis.notification_platform.tenant.domain.Tenant;
 
 @Entity
-@Table(
-    name = "subscription",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_subscription_tenant_event_endpoint",
-        columnNames = {"tenant_id", "event_type", "endpoint_id"}
-    ),
-    indexes = {
+@Table(name = "subscription", uniqueConstraints = @UniqueConstraint(name = "uk_subscription_tenant_event_endpoint", columnNames = {
+    "tenant_id", "event_type", "endpoint_id" }), indexes = {
         @Index(name = "idx_subscription_tenant_event_status", columnList = "tenant_id,event_type,status"),
         @Index(name = "idx_subscription_endpoint_id", columnList = "endpoint_id")
-    }
-)
+    })
 @EntityListeners(AuditingEntityListener.class)
 public class Subscription {
 
@@ -80,6 +74,7 @@ public class Subscription {
     this.tenant = Objects.requireNonNull(tenant, "tenant must not be null");
     this.eventType = normalizeEventType(eventType);
     this.endpoint = Objects.requireNonNull(endpoint, "endpoint must not be null");
+    validateSameTenant(this.tenant, this.endpoint);
     this.status = SubscriptionStatus.ACTIVE;
   }
 
@@ -129,5 +124,18 @@ public class Subscription {
       throw new IllegalArgumentException("eventType must not be blank");
     }
     return normalized;
+  }
+
+  private static void validateSameTenant(Tenant tenant, Endpoint endpoint) {
+    Objects.requireNonNull(tenant, "tenant must not be null");
+    Objects.requireNonNull(endpoint, "endpoint must not be null");
+
+    var tenantId = Objects.requireNonNull(tenant.getId(), "tenant.id must not be null");
+    var endpointTenant = Objects.requireNonNull(endpoint.getTenant(), "endpoint.tenant must not be null");
+    var endpointTenantId = Objects.requireNonNull(endpointTenant.getId(), "endpoint.tenant.id must not be null");
+
+    if (!tenantId.equals(endpointTenantId)) {
+      throw new IllegalArgumentException("endpoint must belong to the same tenant as subscription");
+    }
   }
 }
