@@ -45,6 +45,9 @@ public class ApiKey {
   @JoinColumn(name = "tenant_id", nullable = false)
   private Tenant tenant;
 
+  @Column(name = "tenant_id", nullable = false, insertable = false, updatable = false)
+  private UUID tenantId;
+
   @Column(nullable = false, updatable = false, length = 64)
   private String keyPrefix;
 
@@ -85,6 +88,10 @@ public class ApiKey {
 
   public Tenant getTenant() {
     return tenant;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
   }
 
   public String getKeyPrefix() {

@@ -26,6 +26,7 @@ import lv.janis.notification_platform.auth.domain.ApiKeyStatus;
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
   private static final String API_KEY_HEADER = "X-API-Key";
   private static final String BEARER_PREFIX = "Bearer ";
+  private static final String UNAUTHORIZED_MESSAGE = "Unauthorized";
 
   private final ApiKeyRepositoryPort apiKeyRepositoryPort;
   private final ApiKeyHasher apiKeyHasher;
@@ -40,20 +41,20 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
     String rawKey = resolveRawApiKey(request);
     if (!StringUtils.hasText(rawKey)) {
-      unauthorized(response, "Missing API key");
+      unauthorized(response);
       return;
     }
 
     String keyHash = apiKeyHasher.hash(rawKey);
     ApiKey apiKey = apiKeyRepositoryPort.findByKeyHash(keyHash).orElse(null);
     if (apiKey == null || apiKey.getStatus() != ApiKeyStatus.ACTIVE) {
-      unauthorized(response, "Invalid API key");
+      unauthorized(response);
       return;
     }
 
-    UUID tenantId = apiKey.getTenant() != null ? apiKey.getTenant().getId() : null;
+    UUID tenantId = apiKey.getTenantId();
     if (tenantId == null) {
-      unauthorized(response, "Invalid API key");
+      unauthorized(response);
       return;
     }
 
@@ -86,9 +87,9 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     return null;
   }
 
-  private void unauthorized(HttpServletResponse response, String message) throws IOException {
+  private void unauthorized(HttpServletResponse response) throws IOException {
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     response.setContentType("application/json");
-    response.getWriter().write("{\"message\":\"" + message + "\"}");
+    response.getWriter().write("{\"message\":\"" + UNAUTHORIZED_MESSAGE + "\"}");
   }
 }
