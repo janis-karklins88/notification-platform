@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import lv.janis.notification_platform.outbox.domain.OutboxEvent;
+import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
+import lv.janis.notification_platform.outbox.domain.OutboxEventType;
 import lv.janis.notification_platform.outbox.domain.OutboxStatus;
 
 public interface OutboxEventRepositoryPort {
@@ -17,9 +19,9 @@ public interface OutboxEventRepositoryPort {
 
   Optional<OutboxEvent> findByTenantIdAndAggregateTypeAndAggregateIdAndEventType(
       UUID tenantId,
-      String aggregateType,
+      OutboxEventAggregateType aggregateType,
       UUID aggregateId,
-      String eventType);
+      OutboxEventType eventType);
 
   List<OutboxEvent> findReadyToPublish(OutboxStatus status, Instant now, int limit);
 }

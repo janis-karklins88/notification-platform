@@ -30,12 +30,8 @@ import jakarta.persistence.Version;
 import lv.janis.notification_platform.tenant.domain.Tenant;
 
 @Entity
-@Table(
-    name = "outbox_event",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_outbox_tenant_aggregate_event",
-        columnNames = {"tenant_id", "aggregate_type", "aggregate_id", "event_type"}),
-    indexes = {
+@Table(name = "outbox_event", uniqueConstraints = @UniqueConstraint(name = "uk_outbox_tenant_aggregate_event", columnNames = {
+    "tenant_id", "aggregate_type", "aggregate_id", "event_type" }), indexes = {
         @Index(name = "idx_outbox_status_available_at", columnList = "status,available_at"),
         @Index(name = "idx_outbox_tenant_status", columnList = "tenant_id,status"),
         @Index(name = "idx_outbox_aggregate", columnList = "aggregate_type,aggregate_id")
@@ -55,14 +51,16 @@ public class OutboxEvent {
   @Column(name = "tenant_id", nullable = false, insertable = false, updatable = false)
   private UUID tenantId;
 
-  @Column(name = "aggregate_type", nullable = false, length = 100)
-  private String aggregateType;
+  @Column(name = "aggregate_type", nullable = false)
+  @Enumerated(EnumType.STRING)
+  private OutboxEventAggregateType aggregateType;
 
   @Column(name = "aggregate_id", nullable = false)
   private UUID aggregateId;
 
+  @Enumerated(EnumType.STRING)
   @Column(name = "event_type", nullable = false, length = 100)
-  private String eventType;
+  private OutboxEventType eventType;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(nullable = false, columnDefinition = "jsonb")
@@ -104,15 +102,15 @@ public class OutboxEvent {
 
   public OutboxEvent(
       Tenant tenant,
-      String aggregateType,
+      OutboxEventAggregateType aggregateType,
       UUID aggregateId,
-      String eventType,
+      OutboxEventType eventType,
       JsonNode payload,
       Instant availableAt) {
     this.tenant = Objects.requireNonNull(tenant, "tenant must not be null");
-    this.aggregateType = normalizeRequired(aggregateType, "aggregateType");
+    this.aggregateType = Objects.requireNonNull(aggregateType, "aggregateType must not be null");
     this.aggregateId = Objects.requireNonNull(aggregateId, "aggregateId must not be null");
-    this.eventType = normalizeRequired(eventType, "eventType");
+    this.eventType = Objects.requireNonNull(eventType, "eventType must not be null");
     this.payload = Objects.requireNonNull(payload, "payload must not be null");
     this.availableAt = availableAt == null ? Instant.now() : availableAt;
     this.status = OutboxStatus.PENDING;
@@ -121,9 +119,9 @@ public class OutboxEvent {
 
   public OutboxEvent(
       Tenant tenant,
-      String aggregateType,
+      OutboxEventAggregateType aggregateType,
       UUID aggregateId,
-      String eventType,
+      OutboxEventType eventType,
       JsonNode payload) {
     this(tenant, aggregateType, aggregateId, eventType, payload, null);
   }
@@ -140,7 +138,7 @@ public class OutboxEvent {
     return tenantId;
   }
 
-  public String getAggregateType() {
+  public OutboxEventAggregateType getAggregateType() {
     return aggregateType;
   }
 
@@ -148,7 +146,7 @@ public class OutboxEvent {
     return aggregateId;
   }
 
-  public String getEventType() {
+  public OutboxEventType getEventType() {
     return eventType;
   }
 
@@ -214,14 +212,6 @@ public class OutboxEvent {
     this.status = OutboxStatus.PENDING;
     this.availableAt = Objects.requireNonNull(nextAvailableAt, "nextAvailableAt must not be null");
     this.lastError = normalizeOptional(lastError);
-  }
-
-  private static String normalizeRequired(String value, String name) {
-    String normalized = Objects.requireNonNull(value, name + " must not be null").trim();
-    if (normalized.isEmpty()) {
-      throw new IllegalArgumentException(name + " must not be blank");
-    }
-    return normalized;
   }
 
   private static String normalizeOptional(String value) {

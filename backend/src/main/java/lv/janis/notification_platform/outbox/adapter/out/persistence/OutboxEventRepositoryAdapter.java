@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import lv.janis.notification_platform.outbox.application.port.out.OutboxEventRepositoryPort;
 import lv.janis.notification_platform.outbox.domain.OutboxEvent;
+import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
+import lv.janis.notification_platform.outbox.domain.OutboxEventType;
 import lv.janis.notification_platform.outbox.domain.OutboxStatus;
 
 @Repository
@@ -38,9 +40,9 @@ public class OutboxEventRepositoryAdapter implements OutboxEventRepositoryPort {
   @Override
   public Optional<OutboxEvent> findByTenantIdAndAggregateTypeAndAggregateIdAndEventType(
       UUID tenantId,
-      String aggregateType,
+      OutboxEventAggregateType aggregateType,
       UUID aggregateId,
-      String eventType) {
+      OutboxEventType eventType) {
     return outboxEventJpaRepository.findByTenant_IdAndAggregateTypeAndAggregateIdAndEventType(
         tenantId,
         aggregateType,

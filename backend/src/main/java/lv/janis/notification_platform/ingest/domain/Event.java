@@ -30,19 +30,13 @@ import jakarta.persistence.Version;
 import lv.janis.notification_platform.tenant.domain.Tenant;
 
 @Entity
-@Table(
-    name = "event",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_event_tenant_idempotency_key",
-        columnNames = {"tenant_id", "idempotency_key"}
-    ),
-    indexes = {
+@Table(name = "event", uniqueConstraints = @UniqueConstraint(name = "uk_event_tenant_idempotency_key", columnNames = {
+    "tenant_id", "idempotency_key" }), indexes = {
         @Index(name = "idx_event_tenant_received_at", columnList = "tenant_id,received_at"),
         @Index(name = "idx_event_tenant_status", columnList = "tenant_id,status"),
         @Index(name = "idx_event_tenant_event_type", columnList = "tenant_id,event_type"),
         @Index(name = "idx_event_status_received_at", columnList = "status,received_at")
-    }
-)
+    })
 @EntityListeners(AuditingEntityListener.class)
 public class Event {
 
@@ -54,6 +48,9 @@ public class Event {
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "tenant_id", nullable = false)
   private Tenant tenant;
+
+  @Column(name = "tenant_id", nullable = false, insertable = false, updatable = false)
+  private UUID tenantId;
 
   @Column(name = "event_type", nullable = false, length = 150)
   private String eventType;
@@ -96,8 +93,7 @@ public class Event {
       String idempotencyKey,
       JsonNode payload,
       String source,
-      String traceId
-  ) {
+      String traceId) {
     this.tenant = Objects.requireNonNull(tenant, "tenant must not be null");
     this.eventType = normalizeEventType(eventType);
     this.idempotencyKey = normalizeIdempotencyKey(idempotencyKey);
@@ -113,6 +109,10 @@ public class Event {
 
   public Tenant getTenant() {
     return tenant;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
   }
 
   public String getEventType() {

@@ -6,22 +6,37 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lv.janis.notification_platform.adminapi.application.exception.NotFoundException;
 import lv.janis.notification_platform.ingest.application.port.in.IngestCommand;
 import lv.janis.notification_platform.ingest.application.port.in.IngestResult;
 import lv.janis.notification_platform.ingest.application.port.in.IngestUseCase;
 import lv.janis.notification_platform.ingest.application.port.out.EventRepositoryPort;
 import lv.janis.notification_platform.ingest.domain.Event;
+import lv.janis.notification_platform.outbox.application.port.out.OutboxEventRepositoryPort;
+import lv.janis.notification_platform.outbox.domain.OutboxEvent;
+import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
+import lv.janis.notification_platform.outbox.domain.OutboxEventType;
 import lv.janis.notification_platform.tenant.application.port.out.TenantRepositoryPort;
 
 @Service
 public class IngestService implements IngestUseCase {
   private final EventRepositoryPort eventRepositoryPort;
   private final TenantRepositoryPort tenantRepositoryPort;
+  private final OutboxEventRepositoryPort outboxEventRepositoryPort;
+  private final ObjectMapper objectMapper;
 
-  public IngestService(EventRepositoryPort eventRepositoryPort, TenantRepositoryPort tenantRepositoryPort) {
+  public IngestService(
+      EventRepositoryPort eventRepositoryPort,
+      TenantRepositoryPort tenantRepositoryPort,
+      OutboxEventRepositoryPort outboxEventRepositoryPort,
+      ObjectMapper objectMapper) {
     this.eventRepositoryPort = eventRepositoryPort;
     this.tenantRepositoryPort = tenantRepositoryPort;
+    this.outboxEventRepositoryPort = outboxEventRepositoryPort;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -49,6 +64,8 @@ public class IngestService implements IngestUseCase {
         command.traceId());
 
     Event saved = eventRepositoryPort.save(event);
+    OutboxEvent outboxEvent = createEventAcceptedOutboxEvent(saved);
+    outboxEventRepositoryPort.save(outboxEvent);
     return new IngestResult(saved.getId(), saved.getStatus(), false);
   }
 
@@ -63,5 +80,19 @@ public class IngestService implements IngestUseCase {
       return null;
     }
     return value.trim();
+  }
+
+  private OutboxEvent createEventAcceptedOutboxEvent(Event event) {
+    JsonNode payload = objectMapper.createObjectNode()
+        .put("eventId", event.getId().toString())
+        .put("tenantId", event.getTenantId().toString())
+        .put("eventType", event.getEventType());
+
+    return new OutboxEvent(
+        event.getTenant(),
+        OutboxEventAggregateType.EVENT,
+        event.getId(),
+        OutboxEventType.EVENT_ACCEPTED,
+        payload);
   }
 }
