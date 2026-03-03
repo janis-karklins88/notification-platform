@@ -31,7 +31,8 @@ import lv.janis.notification_platform.tenant.domain.Tenant;
 @Entity
 @Table(name = "endpoint", indexes = {
     @Index(name = "idx_endpoint_tenant_id", columnList = "tenant_id"),
-    @Index(name = "idx_endpoint_status", columnList = "status")
+    @Index(name = "idx_endpoint_status", columnList = "status"),
+    @Index(name = "idx_endpoint_tenant_status", columnList = "tenant_id,status")
 })
 @EntityListeners(AuditingEntityListener.class)
 public class Endpoint {

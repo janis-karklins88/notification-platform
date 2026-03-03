@@ -39,7 +39,8 @@ import lv.janis.notification_platform.tenant.domain.Tenant;
     indexes = {
         @Index(name = "idx_event_tenant_received_at", columnList = "tenant_id,received_at"),
         @Index(name = "idx_event_tenant_status", columnList = "tenant_id,status"),
-        @Index(name = "idx_event_tenant_event_type", columnList = "tenant_id,event_type")
+        @Index(name = "idx_event_tenant_event_type", columnList = "tenant_id,event_type"),
+        @Index(name = "idx_event_status_received_at", columnList = "status,received_at")
     }
 )
 @EntityListeners(AuditingEntityListener.class)

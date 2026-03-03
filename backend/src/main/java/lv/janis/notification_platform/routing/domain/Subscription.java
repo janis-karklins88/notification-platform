@@ -30,7 +30,8 @@ import lv.janis.notification_platform.tenant.domain.Tenant;
 @Table(name = "subscription", uniqueConstraints = @UniqueConstraint(name = "uk_subscription_tenant_event_endpoint", columnNames = {
     "tenant_id", "event_type", "endpoint_id" }), indexes = {
         @Index(name = "idx_subscription_tenant_event_status", columnList = "tenant_id,event_type,status"),
-        @Index(name = "idx_subscription_endpoint_id", columnList = "endpoint_id")
+        @Index(name = "idx_subscription_endpoint_id", columnList = "endpoint_id"),
+        @Index(name = "idx_subscription_tenant_status", columnList = "tenant_id,status")
     })
 @EntityListeners(AuditingEntityListener.class)
 public class Subscription {
