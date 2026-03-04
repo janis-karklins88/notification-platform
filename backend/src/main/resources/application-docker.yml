@@ -27,3 +27,9 @@ management:
     web:
       exposure:
         include: health,info
+
+outbox:
+  dispatch:
+    enabled: false
+    batch-size: 100
+    fixed-delay-ms: 5000

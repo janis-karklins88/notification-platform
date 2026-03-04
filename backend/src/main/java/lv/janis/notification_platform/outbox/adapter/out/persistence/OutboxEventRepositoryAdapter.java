@@ -57,4 +57,12 @@ public class OutboxEventRepositoryAdapter implements OutboxEventRepositoryPort {
         now,
         PageRequest.of(0, limit));
   }
+
+  @Override
+  public List<OutboxEvent> claimNextBatch(int batchSize, Instant now, OutboxStatus status) {
+    return outboxEventJpaRepository.claimNextBatch(
+        status.name(),
+        now,
+        batchSize);
+  }
 }

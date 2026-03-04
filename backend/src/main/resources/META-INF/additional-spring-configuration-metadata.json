@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "outbox.dispatch.batch-size",
+    "type": "java.lang.String",
+    "description": "A description for 'outbox.dispatch.batch-size'"
+  },
+  {
+    "name": "outbox.dispatch.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'outbox.dispatch.enabled'"
+  },
+  {
+    "name": "outbox.dispatch.fixed-delay-ms",
+    "type": "java.lang.String",
+    "description": "A description for 'outbox.dispatch.fixed-delay-ms'"
+  }
+]}

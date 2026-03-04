@@ -60,8 +60,7 @@ public class DeliveryService implements DeliveryUseCase {
     Instant now = Instant.now();
 
     for (var sub : subscriptions) {
-      var delivery = createDelivery(sub, event, now);
-      var savedDelivery = deliveryRepositoryPort.save(delivery);
+      var savedDelivery = deliveryRepositoryPort.save(createDelivery(sub, event, now));
       var outboxEvent = createOutboxEvent(savedDelivery, now);
       outboxRepositoryPort.save(outboxEvent);
     }
