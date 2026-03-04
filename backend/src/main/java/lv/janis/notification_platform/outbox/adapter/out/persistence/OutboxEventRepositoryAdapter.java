@@ -59,10 +59,12 @@ public class OutboxEventRepositoryAdapter implements OutboxEventRepositoryPort {
   }
 
   @Override
-  public List<OutboxEvent> claimNextBatch(int batchSize, Instant now, OutboxStatus status) {
+  public List<OutboxEvent> claimNextBatch(int batchSize, Instant now, Instant staleBefore) {
     return outboxEventJpaRepository.claimNextBatch(
-        status.name(),
+        OutboxStatus.PENDING.name(),
+        OutboxStatus.IN_PROGRESS.name(),
         now,
+        staleBefore,
         batchSize);
   }
 }

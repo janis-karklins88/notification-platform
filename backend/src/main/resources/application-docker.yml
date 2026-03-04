@@ -33,3 +33,7 @@ outbox:
     enabled: false
     batch-size: 100
     fixed-delay-ms: 5000
+    in-progress-timeout-ms: 60000
+    max-attempts: 10
+    finalize-retry-attempts: 3
+    finalize-retry-delay-ms: 200

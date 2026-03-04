@@ -25,5 +25,5 @@ public interface OutboxEventRepositoryPort {
 
   List<OutboxEvent> findReadyToPublish(OutboxStatus status, Instant now, int limit);
 
-  List<OutboxEvent> claimNextBatch(int batchSize, Instant now, OutboxStatus status);
+  List<OutboxEvent> claimNextBatch(int batchSize, Instant now, Instant staleBefore);
 }

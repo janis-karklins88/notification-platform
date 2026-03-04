@@ -7,4 +7,6 @@ public interface OutboxFinalizeUseCase {
   void markPublished(UUID outboxEventId, Instant publishedAt);
 
   void reschedule(UUID outboxEventId, Instant nextAttemptAt, String errorMessage);
+
+  void markFailed(UUID outboxEventId, Instant failedAt, String errorMessage);
 }

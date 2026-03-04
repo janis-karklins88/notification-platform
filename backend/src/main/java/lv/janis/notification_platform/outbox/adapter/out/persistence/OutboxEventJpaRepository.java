@@ -30,15 +30,22 @@ public interface OutboxEventJpaRepository extends JpaRepository<OutboxEvent, UUI
     @Query(value = """
             select *
             from outbox_event
-            where status = :status
-              and available_at <= :now
-            order by available_at asc
+            where (
+                status = :pendingStatus
+                and available_at <= :now
+            ) or (
+                status = :inProgressStatus
+                and last_attempt_at <= :staleBefore
+            )
+            order by available_at asc, last_attempt_at asc
             for update skip locked
             limit :limit
             """, nativeQuery = true)
     List<OutboxEvent> claimNextBatch(
-            @Param("status") String status,
+            @Param("pendingStatus") String pendingStatus,
+            @Param("inProgressStatus") String inProgressStatus,
             @Param("now") Instant now,
+            @Param("staleBefore") Instant staleBefore,
             @Param("limit") int limit);
 
 }
