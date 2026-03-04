@@ -16,6 +16,7 @@ import lv.janis.notification_platform.delivery.application.port.out.DeliveryRepo
 import lv.janis.notification_platform.delivery.domain.Delivery;
 import lv.janis.notification_platform.ingest.application.port.out.EventRepositoryPort;
 import lv.janis.notification_platform.ingest.domain.Event;
+import lv.janis.notification_platform.ingest.domain.EventStatus;
 import lv.janis.notification_platform.outbox.application.port.out.OutboxEventRepositoryPort;
 import lv.janis.notification_platform.outbox.domain.OutboxEvent;
 import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
@@ -48,6 +49,10 @@ public class DeliveryService implements DeliveryUseCase {
     Event event = eventRepositoryPort.findById(eventId)
         .orElseThrow(() -> new NotFoundException("Event with id " + eventId + " not found"));
 
+    if (event.getStatus() == EventStatus.ROUTED) {
+      return;
+    }
+
     List<Subscription> subscriptions = subscriptionRepositoryPort.findActiveByTenantIdAndEventType(event.getTenantId(),
         event.getEventType());
 
@@ -60,6 +65,13 @@ public class DeliveryService implements DeliveryUseCase {
     Instant now = Instant.now();
 
     for (var sub : subscriptions) {
+      boolean alreadyCreated = deliveryRepositoryPort
+          .findByTenantIdAndEventIdAndSubscriptionId(event.getTenantId(), event.getId(), sub.getId())
+          .isPresent();
+      if (alreadyCreated) {
+        continue;
+      }
+
       var savedDelivery = deliveryRepositoryPort.save(createDelivery(sub, event, now));
       var outboxEvent = createOutboxEvent(savedDelivery, now);
       outboxRepositoryPort.save(outboxEvent);
