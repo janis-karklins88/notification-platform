@@ -35,7 +35,6 @@ import lv.janis.notification_platform.tenant.domain.Tenant;
         columnNames = {"tenant_id", "event_id", "subscription_id"}),
     indexes = {
         @Index(name = "idx_delivery_tenant_status", columnList = "tenant_id,status"),
-        @Index(name = "idx_delivery_status_next_attempt_at", columnList = "status,next_attempt_at"),
         @Index(name = "idx_delivery_event_id", columnList = "event_id")
     })
 @EntityListeners(AuditingEntityListener.class)
@@ -78,12 +77,6 @@ public class Delivery {
   @Column(nullable = false, length = 32)
   private DeliveryStatus status;
 
-  @Column(name = "attempt_count", nullable = false)
-  private int attemptCount;
-
-  @Column(name = "next_attempt_at")
-  private Instant nextAttemptAt;
-
   @Column(name = "last_attempt_at")
   private Instant lastAttemptAt;
 
@@ -111,19 +104,14 @@ public class Delivery {
   protected Delivery() {
   }
 
-  public Delivery(Tenant tenant, Event event, Subscription subscription, Endpoint endpoint, Instant nextAttemptAt) {
+  public Delivery(Tenant tenant, Event event, Subscription subscription, Endpoint endpoint) {
     this.tenant = Objects.requireNonNull(tenant, "tenant must not be null");
     this.event = Objects.requireNonNull(event, "event must not be null");
     this.subscription = Objects.requireNonNull(subscription, "subscription must not be null");
     this.endpoint = Objects.requireNonNull(endpoint, "endpoint must not be null");
     validateSameTenant(this.tenant, this.event, this.subscription, this.endpoint);
     this.status = DeliveryStatus.PENDING;
-    this.attemptCount = 0;
-    this.nextAttemptAt = nextAttemptAt;
-  }
-
-  public Delivery(Tenant tenant, Event event, Subscription subscription, Endpoint endpoint) {
-    this(tenant, event, subscription, endpoint, null);
+    this.lastAttemptAt = null;
   }
 
   public UUID getId() {
@@ -166,14 +154,6 @@ public class Delivery {
     return status;
   }
 
-  public int getAttemptCount() {
-    return attemptCount;
-  }
-
-  public Instant getNextAttemptAt() {
-    return nextAttemptAt;
-  }
-
   public Instant getLastAttemptAt() {
     return lastAttemptAt;
   }
@@ -205,28 +185,18 @@ public class Delivery {
   public void markInProgress(Instant attemptedAt) {
     this.status = DeliveryStatus.IN_PROGRESS;
     this.lastAttemptAt = Objects.requireNonNull(attemptedAt, "attemptedAt must not be null");
-    this.attemptCount++;
-    this.nextAttemptAt = null;
-  }
-
-  public void scheduleRetry(Instant nextAttemptAt, String lastError) {
-    this.status = DeliveryStatus.RETRY_SCHEDULED;
-    this.nextAttemptAt = Objects.requireNonNull(nextAttemptAt, "nextAttemptAt must not be null");
-    this.lastError = normalizeOptional(lastError);
   }
 
   public void markDelivered(Instant deliveredAt) {
     this.status = DeliveryStatus.DELIVERED;
     this.deliveredAt = Objects.requireNonNull(deliveredAt, "deliveredAt must not be null");
     this.failedAt = null;
-    this.nextAttemptAt = null;
     this.lastError = null;
   }
 
   public void markFailed(Instant failedAt, String lastError) {
     this.status = DeliveryStatus.FAILED;
     this.failedAt = Objects.requireNonNull(failedAt, "failedAt must not be null");
-    this.nextAttemptAt = null;
     this.lastError = normalizeOptional(lastError);
   }
 

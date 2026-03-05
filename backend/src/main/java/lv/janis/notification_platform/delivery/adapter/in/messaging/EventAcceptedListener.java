@@ -1,6 +1,5 @@
 package lv.janis.notification_platform.delivery.adapter.in.messaging;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -10,29 +9,25 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lv.janis.notification_platform.adminapi.application.exception.NotFoundException;
 import lv.janis.notification_platform.config.OutboxMessagingConstants;
 import lv.janis.notification_platform.delivery.application.port.in.DeliveryUseCase;
+import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
 
 @Component
 public class EventAcceptedListener {
   private static final Logger log = LoggerFactory.getLogger(EventAcceptedListener.class);
 
   private final DeliveryUseCase deliveryUseCase;
-  private final ObjectMapper objectMapper;
 
-  public EventAcceptedListener(DeliveryUseCase deliveryUseCase, ObjectMapper objectMapper) {
+  public EventAcceptedListener(DeliveryUseCase deliveryUseCase) {
     this.deliveryUseCase = deliveryUseCase;
-    this.objectMapper = objectMapper;
   }
 
   @RabbitListener(queues = OutboxMessagingConstants.QUEUE_ROUTING_EVENT_ACCEPTED)
   public void onEventAccepted(Message message) {
     String messageId = message.getMessageProperties().getMessageId();
-    UUID eventId = extractEventId(message.getBody(), messageId);
+    UUID eventId = extractEventId(message, messageId);
     try {
       deliveryUseCase.routeEvent(eventId);
     } catch (NotFoundException | IllegalArgumentException ex) {
@@ -40,16 +35,26 @@ public class EventAcceptedListener {
     }
   }
 
-  private UUID extractEventId(byte[] body, String messageId) {
+  private UUID extractEventId(Message message, String messageId) {
+    var headers = message.getMessageProperties().getHeaders();
+    var aggregateType = headers.get("aggregateType");
+    var aggregateId = headers.get("aggregateId");
+
+    if (!(aggregateType instanceof String)) {
+      throw reject(messageId, "missing or invalid aggregateType header", new IllegalArgumentException("aggregateType: " + aggregateType));
+    }
+
+    if (!OutboxEventAggregateType.EVENT.name().equals(aggregateType)) {
+      throw reject(messageId, "unexpected aggregateType header for event.accepted", new IllegalArgumentException("aggregateType: " + aggregateType));
+    }
+
     try {
-      JsonNode payload = objectMapper.readTree(body);
-      JsonNode eventIdNode = payload.get("eventId");
-      if (eventIdNode == null || !eventIdNode.isTextual()) {
-        throw new IllegalArgumentException("eventId is missing or invalid");
+      if (!(aggregateId instanceof String)) {
+        throw new IllegalArgumentException("aggregateId header is missing or not a string");
       }
-      return UUID.fromString(eventIdNode.asText());
-    } catch (IOException | IllegalArgumentException ex) {
-      throw reject(messageId, "invalid event.accepted payload", ex);
+      return UUID.fromString((String) aggregateId);
+    } catch (IllegalArgumentException ex) {
+      throw reject(messageId, "invalid aggregateId header", ex);
     }
   }
 
@@ -58,4 +63,3 @@ public class EventAcceptedListener {
     return new AmqpRejectAndDontRequeueException(reason, ex);
   }
 }
-

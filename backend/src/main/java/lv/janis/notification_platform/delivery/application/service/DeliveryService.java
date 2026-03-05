@@ -75,7 +75,7 @@ public class DeliveryService implements DeliveryUseCase {
         continue;
       }
 
-      var savedDelivery = deliveryRepositoryPort.save(createDelivery(sub, event, now));
+      var savedDelivery = deliveryRepositoryPort.save(createDelivery(sub, event));
       var outboxEvent = createOutboxEvent(savedDelivery, now);
       outboxRepositoryPort.save(outboxEvent);
     }
@@ -85,10 +85,10 @@ public class DeliveryService implements DeliveryUseCase {
 
   }
 
-  private Delivery createDelivery(Subscription sub, Event event, Instant timestamp) {
+  private Delivery createDelivery(Subscription sub, Event event) {
     var tenant = event.getTenant();
     var endpoint = sub.getEndpoint();
-    return new Delivery(tenant, event, sub, endpoint, timestamp);
+    return new Delivery(tenant, event, sub, endpoint);
   }
 
   private OutboxEvent createOutboxEvent(Delivery delivery, Instant timestamp) {

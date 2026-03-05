@@ -21,6 +21,15 @@ spring:
     port: 5672
     username: notif
     password: notif
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 5
+          initial-interval: 2s
+          max-interval: 30s
+          multiplier: 2.0
 
 management:
   endpoints:
