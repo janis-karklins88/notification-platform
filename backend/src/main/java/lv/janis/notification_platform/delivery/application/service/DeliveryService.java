@@ -1,5 +1,6 @@
 package lv.janis.notification_platform.delivery.application.service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -32,15 +33,17 @@ public class DeliveryService implements DeliveryUseCase {
   private final DeliveryRepositoryPort deliveryRepositoryPort;
   private final OutboxEventRepositoryPort outboxRepositoryPort;
   private final ObjectMapper objectMapper;
+  private final Clock clock;
 
   public DeliveryService(EventRepositoryPort eventRepositoryPort,
       SubscriptionRepositoryPort subscriptionRepositoryPort, DeliveryRepositoryPort deliveryRepositoryPort,
-      OutboxEventRepositoryPort outboxRepositoryPort, ObjectMapper objectMapper) {
+      OutboxEventRepositoryPort outboxRepositoryPort, ObjectMapper objectMapper, Clock clock) {
     this.eventRepositoryPort = eventRepositoryPort;
     this.subscriptionRepositoryPort = subscriptionRepositoryPort;
     this.deliveryRepositoryPort = deliveryRepositoryPort;
     this.outboxRepositoryPort = outboxRepositoryPort;
     this.objectMapper = objectMapper;
+    this.clock = clock;
   }
 
   @Override
@@ -62,7 +65,7 @@ public class DeliveryService implements DeliveryUseCase {
       return;
     }
 
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
 
     for (var sub : subscriptions) {
       boolean alreadyCreated = deliveryRepositoryPort
@@ -92,11 +95,17 @@ public class DeliveryService implements DeliveryUseCase {
     JsonNode payload = objectMapper.createObjectNode()
         .put("deliveryId", delivery.getId().toString())
         .put("eventId", delivery.getEventId().toString());
+    var outboxEventType = switch (delivery.getEndpoint().getType()) {
+      case EMAIL -> OutboxEventType.DELIVERY_CREATED_EMAIL;
+      case WEBHOOK -> OutboxEventType.DELIVERY_CREATED_WEBHOOK;
+      case SMS, PUSH_NOTIFICATION -> throw new IllegalArgumentException(
+          "No outbox routing configured for endpoint type: " + delivery.getEndpoint().getType());
+    };
     return new OutboxEvent(
         delivery.getTenant(),
         OutboxEventAggregateType.DELIVERY,
         delivery.getId(),
-        OutboxEventType.DELIVERY_CREATED,
+        outboxEventType,
         payload,
         timestamp);
 

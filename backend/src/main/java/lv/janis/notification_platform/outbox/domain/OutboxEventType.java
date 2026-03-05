@@ -2,7 +2,8 @@ package lv.janis.notification_platform.outbox.domain;
 
 public enum OutboxEventType {
   EVENT_ACCEPTED("event.accepted"),
-  DELIVERY_CREATED("delivery.created");
+  DELIVERY_CREATED_EMAIL("delivery.created.email"),
+  DELIVERY_CREATED_WEBHOOK("delivery.created.web");
 
   private final String routingKey;
 

@@ -15,7 +15,7 @@ public class OutboxDispatcherJob {
     this.properties = properties;
   }
 
-  // *******PROPERTIES DISABLED FOR NOW SO THIS WONT RUN*************/
+  // ******* PROPERTIES DISABLED FOR NOW SO THIS WONT RUN*************/
   @Scheduled(fixedDelayString = "#{@outboxDispatchProperties.fixedDelayMs()}")
   public void tick() {
     if (!properties.enabled()) {

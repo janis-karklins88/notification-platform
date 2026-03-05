@@ -1,6 +1,7 @@
 package lv.janis.notification_platform.adminapi.application.service;
 
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
@@ -30,14 +31,17 @@ public class ApiKeyService implements ApiKeyUseCase {
   private final TenantRepositoryPort tenantRepositoryPort;
   private final ApiKeyHasher apiKeyHasher;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private final Clock clock;
 
   public ApiKeyService(
       ApiKeyRepositoryPort apiKeyPort,
       TenantRepositoryPort tenantRepositoryPort,
-      ApiKeyHasher apiKeyHasher) {
+      ApiKeyHasher apiKeyHasher,
+      Clock clock) {
     this.apiKeyPort = apiKeyPort;
     this.tenantRepositoryPort = tenantRepositoryPort;
     this.apiKeyHasher = apiKeyHasher;
+    this.clock = clock;
   }
 
   @Override
@@ -74,7 +78,7 @@ public class ApiKeyService implements ApiKeyUseCase {
     if (apiKey.getStatus() == ApiKeyStatus.REVOKED) {
       throw new BadRequestException("API key is already revoked: " + apiKeyId);
     }
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
     apiKey.revoke(now);
     apiKeyPort.save(apiKey);
   }

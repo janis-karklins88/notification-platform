@@ -20,6 +20,7 @@ public class OutboxPublishService implements OutboxPublishUseCase {
 
   public OutboxPublishService(RabbitTemplate rabbitTemplate) {
     this.rabbitTemplate = rabbitTemplate;
+
   }
 
   @Override
@@ -70,4 +71,5 @@ public class OutboxPublishService implements OutboxPublishUseCase {
         "Outbox event " + event.getId() + " was returned by broker, replyCode=" + returnedMessage.getReplyCode()
             + ", replyText=" + returnedMessage.getReplyText() + ", routingKey=" + returnedMessage.getRoutingKey());
   }
+
 }

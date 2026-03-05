@@ -112,18 +112,9 @@ public class OutboxEvent {
     this.aggregateId = Objects.requireNonNull(aggregateId, "aggregateId must not be null");
     this.eventType = Objects.requireNonNull(eventType, "eventType must not be null");
     this.payload = Objects.requireNonNull(payload, "payload must not be null");
-    this.availableAt = availableAt == null ? Instant.now() : availableAt;
+    this.availableAt = availableAt;
     this.status = OutboxStatus.PENDING;
     this.attemptCount = 0;
-  }
-
-  public OutboxEvent(
-      Tenant tenant,
-      OutboxEventAggregateType aggregateType,
-      UUID aggregateId,
-      OutboxEventType eventType,
-      JsonNode payload) {
-    this(tenant, aggregateType, aggregateId, eventType, payload, null);
   }
 
   public UUID getId() {

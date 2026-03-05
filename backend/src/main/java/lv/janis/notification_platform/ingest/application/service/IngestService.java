@@ -1,5 +1,7 @@
 package lv.janis.notification_platform.ingest.application.service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -27,16 +29,19 @@ public class IngestService implements IngestUseCase {
   private final TenantRepositoryPort tenantRepositoryPort;
   private final OutboxEventRepositoryPort outboxEventRepositoryPort;
   private final ObjectMapper objectMapper;
+  private final Clock clock;
 
   public IngestService(
       EventRepositoryPort eventRepositoryPort,
       TenantRepositoryPort tenantRepositoryPort,
       OutboxEventRepositoryPort outboxEventRepositoryPort,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      Clock clock) {
     this.eventRepositoryPort = eventRepositoryPort;
     this.tenantRepositoryPort = tenantRepositoryPort;
     this.outboxEventRepositoryPort = outboxEventRepositoryPort;
     this.objectMapper = objectMapper;
+    this.clock = clock;
   }
 
   @Override
@@ -64,7 +69,7 @@ public class IngestService implements IngestUseCase {
         command.traceId());
 
     Event saved = eventRepositoryPort.save(event);
-    OutboxEvent outboxEvent = createEventAcceptedOutboxEvent(saved);
+    OutboxEvent outboxEvent = createEventAcceptedOutboxEvent(saved, Instant.now(clock));
     outboxEventRepositoryPort.save(outboxEvent);
     return new IngestResult(saved.getId(), saved.getStatus(), false);
   }
@@ -82,7 +87,7 @@ public class IngestService implements IngestUseCase {
     return value.trim();
   }
 
-  private OutboxEvent createEventAcceptedOutboxEvent(Event event) {
+  private OutboxEvent createEventAcceptedOutboxEvent(Event event, Instant timestamp) {
     JsonNode payload = objectMapper.createObjectNode()
         .put("eventId", event.getId().toString())
         .put("tenantId", event.getTenantId().toString())
@@ -93,6 +98,7 @@ public class IngestService implements IngestUseCase {
         OutboxEventAggregateType.EVENT,
         event.getId(),
         OutboxEventType.EVENT_ACCEPTED,
-        payload);
+        payload,
+        timestamp);
   }
 }

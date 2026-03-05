@@ -23,8 +23,13 @@ public class OutboxRabbitConfig {
   }
 
   @Bean
-  Queue deliveryCreatedQueue() {
-    return new Queue(OutboxMessagingConstants.QUEUE_DELIVERY_CREATED, true);
+  Queue deliveryCreatedWebhookQueue() {
+    return new Queue(OutboxMessagingConstants.QUEUE_DELIVERY_CREATED_WEBHOOK, true);
+  }
+
+  @Bean
+  Queue deliveryCreatedEmailQueue() {
+    return new Queue(OutboxMessagingConstants.QUEUE_DELIVERY_CREATED_EMAIL, true);
   }
 
   @Bean
@@ -35,10 +40,17 @@ public class OutboxRabbitConfig {
   }
 
   @Bean
-  Binding deliveryCreatedBinding(Queue deliveryCreatedQueue, TopicExchange outboxEventsExchange) {
-    return BindingBuilder.bind(deliveryCreatedQueue)
+  Binding deliveryCreatedWebhookBinding(Queue deliveryCreatedWebhookQueue, TopicExchange outboxEventsExchange) {
+    return BindingBuilder.bind(deliveryCreatedWebhookQueue)
         .to(outboxEventsExchange)
-        .with(OutboxMessagingConstants.RK_DELIVERY_CREATED);
+        .with(OutboxMessagingConstants.RK_DELIVERY_CREATED_WEBHOOK);
+  }
+
+  @Bean
+  Binding deliveryCreatedEmailBinding(Queue deliveryCreatedEmailQueue, TopicExchange outboxEventsExchange) {
+    return BindingBuilder.bind(deliveryCreatedEmailQueue)
+        .to(outboxEventsExchange)
+        .with(OutboxMessagingConstants.RK_DELIVERY_CREATED_EMAIL);
   }
 
   @Bean
