@@ -45,6 +45,9 @@ public class Subscription {
   @JoinColumn(name = "tenant_id", nullable = false)
   private Tenant tenant;
 
+  @Column(name = "tenant_id", nullable = false, insertable = false, updatable = false)
+  private UUID tenantId;
+
   @Column(name = "event_type", nullable = false, length = 150)
   private String eventType;
 
@@ -85,6 +88,10 @@ public class Subscription {
 
   public Tenant getTenant() {
     return tenant;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
   }
 
   public String getEventType() {

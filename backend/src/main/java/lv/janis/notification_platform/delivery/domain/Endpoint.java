@@ -46,6 +46,9 @@ public class Endpoint {
   @JoinColumn(name = "tenant_id", nullable = false)
   private Tenant tenant;
 
+  @Column(name = "tenant_id", nullable = false, insertable = false, updatable = false)
+  private UUID tenantId;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 32)
   private EndpointType type;
@@ -86,6 +89,10 @@ public class Endpoint {
 
   public Tenant getTenant() {
     return tenant;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
   }
 
   public EndpointType getType() {

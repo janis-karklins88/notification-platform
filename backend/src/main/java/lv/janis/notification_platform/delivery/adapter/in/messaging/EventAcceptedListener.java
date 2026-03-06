@@ -9,10 +9,8 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-import lv.janis.notification_platform.adminapi.application.exception.NotFoundException;
 import lv.janis.notification_platform.config.OutboxMessagingConstants;
 import lv.janis.notification_platform.delivery.application.port.in.DeliveryUseCase;
-import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
 
 @Component
 public class EventAcceptedListener {
@@ -27,34 +25,14 @@ public class EventAcceptedListener {
   @RabbitListener(queues = OutboxMessagingConstants.QUEUE_ROUTING_EVENT_ACCEPTED)
   public void onEventAccepted(Message message) {
     String messageId = message.getMessageProperties().getMessageId();
-    UUID eventId = extractEventId(message, messageId);
+    UUID eventId = DeliveryListenerMessageExtractor.extractEventId(message, messageId);
     try {
       deliveryUseCase.routeEvent(eventId);
-    } catch (NotFoundException | IllegalArgumentException ex) {
-      throw reject(messageId, "non-retryable event.accepted payload or event state", ex);
-    }
-  }
-
-  private UUID extractEventId(Message message, String messageId) {
-    var headers = message.getMessageProperties().getHeaders();
-    var aggregateType = headers.get("aggregateType");
-    var aggregateId = headers.get("aggregateId");
-
-    if (!(aggregateType instanceof String)) {
-      throw reject(messageId, "missing or invalid aggregateType header", new IllegalArgumentException("aggregateType: " + aggregateType));
-    }
-
-    if (!OutboxEventAggregateType.EVENT.name().equals(aggregateType)) {
-      throw reject(messageId, "unexpected aggregateType header for event.accepted", new IllegalArgumentException("aggregateType: " + aggregateType));
-    }
-
-    try {
-      if (!(aggregateId instanceof String)) {
-        throw new IllegalArgumentException("aggregateId header is missing or not a string");
+    } catch (Exception ex) {
+      if (DeliveryListenerFailurePolicy.isNonRetryable(ex)) {
+        throw reject(messageId, "non-retryable event.accepted payload or event state", ex);
       }
-      return UUID.fromString((String) aggregateId);
-    } catch (IllegalArgumentException ex) {
-      throw reject(messageId, "invalid aggregateId header", ex);
+      throw ex;
     }
   }
 
