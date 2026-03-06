@@ -40,6 +40,8 @@ public class WebhookDeliveryService implements WebhookDeliveryUseCase {
       return;
     }
 
+    deliveryProcessingService.ensureNotFreshlyInProgress(delivery, clock);
+
     if (!deliveryProcessingService.checkTenantConsistency(delivery)) {
       throw new BadRequestException("Tenant is not consistent");
     }
@@ -57,6 +59,7 @@ public class WebhookDeliveryService implements WebhookDeliveryUseCase {
     try {
       webhookSenderAdapter.send(delivery);
       delivery.markDelivered(clock.instant());
+      deliveryRepositoryPort.save(delivery);
     } catch (Exception ex) {
       if (DeliveryListenerFailurePolicy.isNonRetryable(ex)) {
         delivery.markFailed(clock.instant(), ex.getMessage());

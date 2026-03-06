@@ -40,6 +40,8 @@ public class EmailDeliveryService implements EmailDeliveryUseCase {
       return;
     }
 
+    deliveryProcessingService.ensureNotFreshlyInProgress(delivery, clock);
+
     if (!deliveryProcessingService.checkTenantConsistency(delivery)) {
       throw new BadRequestException("Tenant is not consistent");
     }
