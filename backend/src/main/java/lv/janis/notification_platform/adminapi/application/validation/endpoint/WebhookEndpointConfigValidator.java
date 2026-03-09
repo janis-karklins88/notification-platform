@@ -44,8 +44,18 @@ public class WebhookEndpointConfigValidator implements EndpointConfigValidator {
     }
 
     JsonNode headersNode = config.get("headers");
-    if (headersNode != null && !headersNode.isObject()) {
+    if (headersNode == null) {
+      return;
+    }
+
+    if (!headersNode.isObject()) {
       throw new BadRequestException("WEBHOOK 'headers' must be a JSON object");
+    }
+
+    for (var entry : headersNode.properties()) {
+      if (!entry.getValue().isTextual()) {
+        throw new BadRequestException("WEBHOOK header values must be strings: " + entry.getKey());
+      }
     }
 
     JsonNode timeoutNode = config.get("timeoutMs");
