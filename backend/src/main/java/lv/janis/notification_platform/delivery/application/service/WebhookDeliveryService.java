@@ -10,22 +10,22 @@ import lv.janis.notification_platform.adminapi.application.exception.BadRequestE
 import lv.janis.notification_platform.adminapi.application.exception.NotFoundException;
 import lv.janis.notification_platform.delivery.application.exception.DeliveryNonRetryableException;
 import lv.janis.notification_platform.delivery.adapter.in.messaging.DeliveryListenerFailurePolicy;
-import lv.janis.notification_platform.delivery.adapter.out.sender.WebhookSenderAdapter;
 import lv.janis.notification_platform.delivery.application.port.in.WebhookDeliveryUseCase;
 import lv.janis.notification_platform.delivery.application.port.out.DeliveryRepositoryPort;
+import lv.janis.notification_platform.delivery.application.port.out.WebhookSenderPort;
 import lv.janis.notification_platform.delivery.domain.EndpointType;
 
 @Service
 public class WebhookDeliveryService implements WebhookDeliveryUseCase {
   private final DeliveryRepositoryPort deliveryRepositoryPort;
-  private final WebhookSenderAdapter webhookSenderAdapter;
+  private final WebhookSenderPort webhookSenderPort;
   private final DeliveryProcessingService deliveryProcessingService;
   private final Clock clock;
 
   public WebhookDeliveryService(DeliveryRepositoryPort deliveryRepositoryPort,
-      WebhookSenderAdapter webhookSenderAdapter, DeliveryProcessingService deliveryProcessingService, Clock clock) {
+      WebhookSenderPort webhookSenderPort, DeliveryProcessingService deliveryProcessingService, Clock clock) {
     this.deliveryRepositoryPort = deliveryRepositoryPort;
-    this.webhookSenderAdapter = webhookSenderAdapter;
+    this.webhookSenderPort = webhookSenderPort;
     this.deliveryProcessingService = deliveryProcessingService;
     this.clock = clock;
   }
@@ -57,7 +57,7 @@ public class WebhookDeliveryService implements WebhookDeliveryUseCase {
     delivery.markInProgress(clock.instant());
     deliveryRepositoryPort.save(delivery);
     try {
-      webhookSenderAdapter.send(delivery);
+      webhookSenderPort.send(delivery);
       delivery.markDelivered(clock.instant());
       deliveryRepositoryPort.save(delivery);
     } catch (Exception ex) {

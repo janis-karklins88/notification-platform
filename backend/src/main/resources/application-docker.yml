@@ -24,6 +24,9 @@ spring:
     listener:
       simple:
         default-requeue-rejected: false
+        prefetch: 1
+        concurrency: 2
+        max-concurrency: 4
         retry:
           enabled: true
           max-attempts: 5

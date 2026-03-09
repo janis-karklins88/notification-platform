@@ -10,22 +10,22 @@ import lv.janis.notification_platform.adminapi.application.exception.BadRequestE
 import lv.janis.notification_platform.adminapi.application.exception.NotFoundException;
 import lv.janis.notification_platform.delivery.application.exception.DeliveryNonRetryableException;
 import lv.janis.notification_platform.delivery.adapter.in.messaging.DeliveryListenerFailurePolicy;
-import lv.janis.notification_platform.delivery.adapter.out.sender.EmailSenderAdapter;
 import lv.janis.notification_platform.delivery.application.port.in.EmailDeliveryUseCase;
 import lv.janis.notification_platform.delivery.application.port.out.DeliveryRepositoryPort;
+import lv.janis.notification_platform.delivery.application.port.out.EmailSenderPort;
 import lv.janis.notification_platform.delivery.domain.EndpointType;
 
 @Service
 public class EmailDeliveryService implements EmailDeliveryUseCase {
   private final DeliveryRepositoryPort deliveryRepositoryPort;
-  private final EmailSenderAdapter emailSenderAdapter;
+  private final EmailSenderPort emailSenderPort;
   private final DeliveryProcessingService deliveryProcessingService;
   private final Clock clock;
 
   public EmailDeliveryService(DeliveryRepositoryPort deliveryRepositoryPort,
-      EmailSenderAdapter emailSenderAdapter, DeliveryProcessingService deliveryProcessingService, Clock clock) {
+      EmailSenderPort emailSenderPort, DeliveryProcessingService deliveryProcessingService, Clock clock) {
     this.deliveryRepositoryPort = deliveryRepositoryPort;
-    this.emailSenderAdapter = emailSenderAdapter;
+    this.emailSenderPort = emailSenderPort;
     this.deliveryProcessingService = deliveryProcessingService;
     this.clock = clock;
   }
@@ -57,7 +57,7 @@ public class EmailDeliveryService implements EmailDeliveryUseCase {
     delivery.markInProgress(clock.instant());
     deliveryRepositoryPort.save(delivery);
     try {
-      emailSenderAdapter.send(delivery);
+      emailSenderPort.send(delivery);
       delivery.markDelivered(clock.instant());
       deliveryRepositoryPort.save(delivery);
       return;
