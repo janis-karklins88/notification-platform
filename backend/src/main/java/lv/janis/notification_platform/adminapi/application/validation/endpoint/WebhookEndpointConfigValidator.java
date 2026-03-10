@@ -44,29 +44,36 @@ public class WebhookEndpointConfigValidator implements EndpointConfigValidator {
     }
 
     JsonNode headersNode = config.get("headers");
-    if (headersNode == null) {
+    if (headersNode != null) {
+      if (!headersNode.isObject()) {
+        throw new BadRequestException("WEBHOOK 'headers' must be a JSON object");
+      }
+
+      for (var entry : headersNode.properties()) {
+        if (!entry.getValue().isTextual()) {
+          throw new BadRequestException("WEBHOOK header values must be strings: " + entry.getKey());
+        }
+      }
+    }
+
+    validateTimeout(config, "connectTimeoutMs", 2000, 3000);
+    validateTimeout(config, "responseTimeoutMs", 5000, 10000);
+    validateTimeout(config, "connectionRequestTimeoutMs", 1000, 3000);
+  }
+
+  private void validateTimeout(JsonNode config, String key, int min, int max) {
+    JsonNode node = config.get(key);
+    if (node == null) {
       return;
     }
 
-    if (!headersNode.isObject()) {
-      throw new BadRequestException("WEBHOOK 'headers' must be a JSON object");
+    if (!node.canConvertToInt()) {
+      throw new BadRequestException("WEBHOOK '" + key + "' must be an integer");
     }
 
-    for (var entry : headersNode.properties()) {
-      if (!entry.getValue().isTextual()) {
-        throw new BadRequestException("WEBHOOK header values must be strings: " + entry.getKey());
-      }
-    }
-
-    JsonNode timeoutNode = config.get("timeoutMs");
-    if (timeoutNode != null) {
-      if (!timeoutNode.canConvertToInt()) {
-        throw new BadRequestException("WEBHOOK 'timeoutMs' must be an integer");
-      }
-      int timeout = timeoutNode.asInt();
-      if (timeout < 100 || timeout > 30000) {
-        throw new BadRequestException("WEBHOOK 'timeoutMs' must be between 100 and 30000");
-      }
+    int timeout = node.asInt();
+    if (timeout < min || timeout > max) {
+      throw new BadRequestException("WEBHOOK '" + key + "' must be between " + min + " and " + max);
     }
   }
 }

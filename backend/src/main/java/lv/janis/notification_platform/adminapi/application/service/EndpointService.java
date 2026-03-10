@@ -19,11 +19,24 @@ import lv.janis.notification_platform.adminapi.application.validation.endpoint.E
 import lv.janis.notification_platform.delivery.application.port.out.EndpointFilter;
 import lv.janis.notification_platform.delivery.application.port.out.EndpointRepositoryPort;
 import lv.janis.notification_platform.delivery.domain.Endpoint;
+import lv.janis.notification_platform.delivery.domain.EndpointType;
 import lv.janis.notification_platform.tenant.application.port.out.TenantRepositoryPort;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
 public class EndpointService implements EndpointUseCase {
   private static final int MAX_PAGE_SIZE = 100;
+  private static final int DEFAULT_CONNECT_TIMEOUT_MS = 2500;
+  private static final int DEFAULT_RESPONSE_TIMEOUT_MS = 5000;
+  private static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 2000;
+  private static final int MIN_CONNECT_TIMEOUT_MS = 2000;
+  private static final int MAX_CONNECT_TIMEOUT_MS = 3000;
+  private static final int MIN_RESPONSE_TIMEOUT_MS = 5000;
+  private static final int MAX_RESPONSE_TIMEOUT_MS = 10000;
+  private static final int MIN_CONNECTION_REQUEST_TIMEOUT_MS = 1000;
+  private static final int MAX_CONNECTION_REQUEST_TIMEOUT_MS = 3000;
 
   private final EndpointRepositoryPort endpointRepositoryPort;
   private final TenantRepositoryPort tenantRepositoryPort;
@@ -71,7 +84,10 @@ public class EndpointService implements EndpointUseCase {
     var tenant = tenantRepositoryPort.findById(command.tenantId())
         .orElseThrow(() -> new NotFoundException("Tenant with " + command.tenantId() + " not found"));
 
-    Endpoint endpoint = new Endpoint(tenant, command.type(), command.config());
+    Endpoint endpoint = new Endpoint(
+        tenant,
+        command.type(),
+        withWebhookTimeoutDefaults(command.type(), command.config()));
     return endpointRepositoryPort.save(endpoint);
   }
 
@@ -81,8 +97,49 @@ public class EndpointService implements EndpointUseCase {
     var endpoint = endpointRepositoryPort.findById(command.endpointId())
         .orElseThrow(() -> new NotFoundException("Endpoint with " + command.endpointId() + " not found"));
     endpointConfigValidatorRegistry.get(endpoint.getType()).validate(command.config());
-    endpoint.setConfig(command.config());
+    endpoint.setConfig(withWebhookTimeoutDefaults(endpoint.getType(), command.config()));
     return endpointRepositoryPort.save(endpoint);
+  }
+
+  private JsonNode withWebhookTimeoutDefaults(EndpointType type, JsonNode config) {
+    if (type != EndpointType.WEBHOOK) {
+      return config;
+    }
+
+    ObjectNode updatedConfig = config.deepCopy();
+    addTimeoutDefault(updatedConfig, "connectTimeoutMs", DEFAULT_CONNECT_TIMEOUT_MS, MIN_CONNECT_TIMEOUT_MS, MAX_CONNECT_TIMEOUT_MS);
+    addTimeoutDefault(updatedConfig, "responseTimeoutMs", DEFAULT_RESPONSE_TIMEOUT_MS, MIN_RESPONSE_TIMEOUT_MS,
+        MAX_RESPONSE_TIMEOUT_MS);
+    addTimeoutDefault(updatedConfig, "connectionRequestTimeoutMs", DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS,
+        MIN_CONNECTION_REQUEST_TIMEOUT_MS, MAX_CONNECTION_REQUEST_TIMEOUT_MS);
+
+    return updatedConfig;
+  }
+
+  private void addTimeoutDefault(
+      ObjectNode updatedConfig,
+      String key,
+      int defaultValue,
+      int minValue,
+      int maxValue) {
+    if (updatedConfig.has(key) && updatedConfig.get(key) != null && updatedConfig.get(key).canConvertToInt()) {
+      int value = updatedConfig.get(key).asInt();
+      if (value >= minValue && value <= maxValue) {
+        return;
+      }
+      updatedConfig.put(key, clamp(value, minValue, maxValue));
+      return;
+    }
+
+    int value = defaultValue;
+    if (value < minValue || value > maxValue) {
+      value = clamp(value, minValue, maxValue);
+    }
+    updatedConfig.put(key, value);
+  }
+
+  private static int clamp(int value, int minValue, int maxValue) {
+    return Math.min(Math.max(value, minValue), maxValue);
   }
 
   @Override
