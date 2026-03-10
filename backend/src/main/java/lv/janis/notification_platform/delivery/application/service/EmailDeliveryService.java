@@ -11,8 +11,8 @@ import lv.janis.notification_platform.adminapi.application.exception.NotFoundExc
 import lv.janis.notification_platform.delivery.application.exception.DeliveryNonRetryableException;
 import lv.janis.notification_platform.delivery.adapter.in.messaging.DeliveryListenerFailurePolicy;
 import lv.janis.notification_platform.delivery.application.port.in.EmailDeliveryUseCase;
-import lv.janis.notification_platform.delivery.application.port.out.DeliveryRepositoryPort;
 import lv.janis.notification_platform.delivery.application.port.out.EmailSenderPort;
+import lv.janis.notification_platform.delivery.application.port.out.DeliveryRepositoryPort;
 import lv.janis.notification_platform.delivery.domain.EndpointType;
 
 @Service
@@ -21,12 +21,15 @@ public class EmailDeliveryService implements EmailDeliveryUseCase {
   private final EmailSenderPort emailSenderPort;
   private final DeliveryProcessingService deliveryProcessingService;
   private final Clock clock;
+  private final EmailMessageFactory emailMessageFactory;
 
   public EmailDeliveryService(DeliveryRepositoryPort deliveryRepositoryPort,
-      EmailSenderPort emailSenderPort, DeliveryProcessingService deliveryProcessingService, Clock clock) {
+      EmailSenderPort emailSenderPort, DeliveryProcessingService deliveryProcessingService, EmailMessageFactory emailMessageFactory,
+      Clock clock) {
     this.deliveryRepositoryPort = deliveryRepositoryPort;
     this.emailSenderPort = emailSenderPort;
     this.deliveryProcessingService = deliveryProcessingService;
+    this.emailMessageFactory = emailMessageFactory;
     this.clock = clock;
   }
 
@@ -57,7 +60,7 @@ public class EmailDeliveryService implements EmailDeliveryUseCase {
     delivery.markInProgress(clock.instant());
     deliveryRepositoryPort.save(delivery);
     try {
-      emailSenderPort.send(delivery);
+      emailSenderPort.send(emailMessageFactory.build(delivery));
       delivery.markDelivered(clock.instant());
       deliveryRepositoryPort.save(delivery);
       return;

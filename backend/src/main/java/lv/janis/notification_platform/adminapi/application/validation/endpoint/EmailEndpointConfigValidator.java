@@ -44,6 +44,32 @@ public class EmailEndpointConfigValidator implements EndpointConfigValidator {
     if (replyToNode != null && (!replyToNode.isTextual() || !isValidEmail(replyToNode.asText()))) {
       throw new BadRequestException("EMAIL 'replyTo' must be a valid email");
     }
+
+    JsonNode subjectTemplateNode = config.get("subjectTemplate");
+    if (subjectTemplateNode != null && !subjectTemplateNode.isTextual()) {
+      throw new BadRequestException("EMAIL 'subjectTemplate' must be a string");
+    }
+
+    JsonNode bodyTemplateNode = config.get("bodyTemplate");
+    if (bodyTemplateNode != null && !bodyTemplateNode.isTextual()) {
+      throw new BadRequestException("EMAIL 'bodyTemplate' must be a string");
+    }
+
+    JsonNode bodyTypeNode = config.get("bodyType");
+    if (bodyTypeNode != null) {
+      if (!bodyTypeNode.isTextual()) {
+        throw new BadRequestException("EMAIL 'bodyType' must be a string");
+      }
+      String bodyType = bodyTypeNode.asText().trim().toLowerCase();
+      if (!("text".equals(bodyType) || "html".equals(bodyType))) {
+        throw new BadRequestException("EMAIL 'bodyType' must be either 'text' or 'html'");
+      }
+    }
+
+    JsonNode templateNameNode = config.get("templateName");
+    if (templateNameNode != null && !templateNameNode.isTextual()) {
+      throw new BadRequestException("EMAIL 'templateName' must be a string");
+    }
   }
 
   private boolean isValidEmail(String email) {
