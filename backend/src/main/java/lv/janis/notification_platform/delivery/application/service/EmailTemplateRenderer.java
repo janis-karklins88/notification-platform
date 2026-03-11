@@ -78,41 +78,39 @@ public class EmailTemplateRenderer {
         return "";
       }
 
-      String arrayField = part;
-      Integer arrayIndex = null;
+      String field = part;
+      Integer index = null;
 
       int bracketStart = part.indexOf('[');
       int bracketEnd = part.indexOf(']');
       if (bracketStart > 0 && bracketEnd > bracketStart) {
-        String field = part.substring(0, bracketStart);
+        field = part.substring(0, bracketStart);
         String indexText = part.substring(bracketStart + 1, bracketEnd);
-        arrayField = field;
         try {
-          arrayIndex = Integer.parseInt(indexText);
+          index = Integer.parseInt(indexText);
         } catch (NumberFormatException ex) {
           return "";
         }
       }
 
-      if (current instanceof Map<?, ?> map) {
-        current = map.get(arrayField);
-      } else if (current instanceof List<?> list) {
-        if (arrayIndex == null || arrayIndex < 0 || arrayIndex >= list.size()) {
-          return "";
-        }
-        current = list.get(arrayIndex);
-      } else {
+      if (!(current instanceof Map<?, ?> map)) {
         return "";
       }
 
-      if (arrayIndex != null) {
+      if (field.isBlank()) {
+        return "";
+      }
+
+      current = map.get(field);
+
+      if (index != null) {
         if (!(current instanceof List<?> list)) {
           return "";
         }
-        if (arrayIndex < 0 || arrayIndex >= list.size()) {
+        if (index < 0 || index >= list.size()) {
           return "";
         }
-        current = list.get(arrayIndex);
+        current = list.get(index);
       }
     }
 
