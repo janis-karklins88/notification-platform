@@ -24,6 +24,7 @@ import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
 import lv.janis.notification_platform.outbox.domain.OutboxEventType;
 import lv.janis.notification_platform.routing.application.port.out.SubscriptionRepositoryPort;
 import lv.janis.notification_platform.routing.domain.Subscription;
+import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class DeliveryService implements DeliveryUseCase {
@@ -34,16 +35,19 @@ public class DeliveryService implements DeliveryUseCase {
   private final OutboxEventRepositoryPort outboxRepositoryPort;
   private final ObjectMapper objectMapper;
   private final Clock clock;
+  private final NotificationMetrics notificationMetrics;
 
   public DeliveryService(EventRepositoryPort eventRepositoryPort,
       SubscriptionRepositoryPort subscriptionRepositoryPort, DeliveryRepositoryPort deliveryRepositoryPort,
-      OutboxEventRepositoryPort outboxRepositoryPort, ObjectMapper objectMapper, Clock clock) {
+      OutboxEventRepositoryPort outboxRepositoryPort, ObjectMapper objectMapper, Clock clock,
+      NotificationMetrics notificationMetrics) {
     this.eventRepositoryPort = eventRepositoryPort;
     this.subscriptionRepositoryPort = subscriptionRepositoryPort;
     this.deliveryRepositoryPort = deliveryRepositoryPort;
     this.outboxRepositoryPort = outboxRepositoryPort;
     this.objectMapper = objectMapper;
     this.clock = clock;
+    this.notificationMetrics = notificationMetrics;
   }
 
   @Override
@@ -66,6 +70,7 @@ public class DeliveryService implements DeliveryUseCase {
     }
 
     Instant now = Instant.now(clock);
+    int createdCount = 0;
 
     for (var sub : subscriptions) {
       boolean alreadyCreated = deliveryRepositoryPort
@@ -78,7 +83,9 @@ public class DeliveryService implements DeliveryUseCase {
       var savedDelivery = deliveryRepositoryPort.save(createDelivery(sub, event));
       var outboxEvent = createOutboxEvent(savedDelivery, now);
       outboxRepositoryPort.save(outboxEvent);
+      createdCount++;
     }
+    notificationMetrics.incrementDeliveriesCreated(createdCount);
 
     event.markRouted();
     eventRepositoryPort.save(event);

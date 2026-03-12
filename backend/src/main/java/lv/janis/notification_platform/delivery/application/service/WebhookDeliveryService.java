@@ -14,6 +14,7 @@ import lv.janis.notification_platform.delivery.application.port.in.WebhookDelive
 import lv.janis.notification_platform.delivery.application.port.out.DeliveryRepositoryPort;
 import lv.janis.notification_platform.delivery.application.port.out.WebhookSenderPort;
 import lv.janis.notification_platform.delivery.domain.EndpointType;
+import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class WebhookDeliveryService implements WebhookDeliveryUseCase {
@@ -21,13 +22,16 @@ public class WebhookDeliveryService implements WebhookDeliveryUseCase {
   private final WebhookSenderPort webhookSenderPort;
   private final DeliveryProcessingService deliveryProcessingService;
   private final Clock clock;
+  private final NotificationMetrics notificationMetrics;
 
   public WebhookDeliveryService(DeliveryRepositoryPort deliveryRepositoryPort,
-      WebhookSenderPort webhookSenderPort, DeliveryProcessingService deliveryProcessingService, Clock clock) {
+      WebhookSenderPort webhookSenderPort, DeliveryProcessingService deliveryProcessingService, Clock clock,
+      NotificationMetrics notificationMetrics) {
     this.deliveryRepositoryPort = deliveryRepositoryPort;
     this.webhookSenderPort = webhookSenderPort;
     this.deliveryProcessingService = deliveryProcessingService;
     this.clock = clock;
+    this.notificationMetrics = notificationMetrics;
   }
 
   @Override
@@ -56,16 +60,20 @@ public class WebhookDeliveryService implements WebhookDeliveryUseCase {
 
     delivery.markInProgress(clock.instant());
     deliveryRepositoryPort.save(delivery);
+    notificationMetrics.incrementDeliveryAttemptStarted();
     try {
       webhookSenderPort.send(delivery);
       delivery.markDelivered(clock.instant());
       deliveryRepositoryPort.save(delivery);
+      notificationMetrics.incrementDeliverySuccess();
     } catch (Exception ex) {
       if (DeliveryListenerFailurePolicy.isNonRetryable(ex)) {
         delivery.markFailed(clock.instant(), ex.getMessage());
         deliveryRepositoryPort.save(delivery);
+        notificationMetrics.incrementDeliveryFailure();
         throw new DeliveryNonRetryableException(ex);
       }
+      notificationMetrics.incrementDeliveryRetryScheduled();
       throw ex;
     }
 

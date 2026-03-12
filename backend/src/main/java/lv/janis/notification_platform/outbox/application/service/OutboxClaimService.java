@@ -9,17 +9,21 @@ import jakarta.transaction.Transactional;
 import lv.janis.notification_platform.outbox.application.port.in.OutboxClaimUseCase;
 import lv.janis.notification_platform.outbox.application.port.out.OutboxEventRepositoryPort;
 import lv.janis.notification_platform.outbox.domain.OutboxEvent;
+import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class OutboxClaimService implements OutboxClaimUseCase {
   private final OutboxEventRepositoryPort outboxEventRepositoryPort;
   private final OutboxDispatchProperties outboxDispatchProperties;
+  private final NotificationMetrics notificationMetrics;
 
   public OutboxClaimService(
       OutboxEventRepositoryPort outboxEventRepositoryPort,
-      OutboxDispatchProperties outboxDispatchProperties) {
+      OutboxDispatchProperties outboxDispatchProperties,
+      NotificationMetrics notificationMetrics) {
     this.outboxEventRepositoryPort = outboxEventRepositoryPort;
     this.outboxDispatchProperties = outboxDispatchProperties;
+    this.notificationMetrics = notificationMetrics;
   }
 
   @Override
@@ -30,6 +34,8 @@ public class OutboxClaimService implements OutboxClaimUseCase {
     for (var event : claimedEvents) {
       event.markInProgress(now);
     }
-    return outboxEventRepositoryPort.saveAll(claimedEvents);
+    List<OutboxEvent> saved = outboxEventRepositoryPort.saveAll(claimedEvents);
+    notificationMetrics.incrementOutboxClaimed(saved.size());
+    return saved;
   }
 }

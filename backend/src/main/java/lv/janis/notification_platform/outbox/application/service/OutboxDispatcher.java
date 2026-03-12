@@ -15,6 +15,7 @@ import lv.janis.notification_platform.outbox.application.port.in.OutboxDispatchU
 import lv.janis.notification_platform.outbox.application.port.in.OutboxFinalizeUseCase;
 import lv.janis.notification_platform.outbox.application.port.in.OutboxPublishUseCase;
 import lv.janis.notification_platform.outbox.domain.OutboxEvent;
+import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class OutboxDispatcher implements OutboxDispatchUseCase {
@@ -25,14 +26,17 @@ public class OutboxDispatcher implements OutboxDispatchUseCase {
   private final OutboxFinalizeUseCase outboxFinalizeUseCase;
   private final OutboxDispatchProperties properties;
   private final Clock clock;
+  private final NotificationMetrics notificationMetrics;
 
   public OutboxDispatcher(OutboxClaimUseCase outboxClaimUseCase, OutboxPublishUseCase outboxPublishUseCase,
-      OutboxFinalizeUseCase outboxFinalizeUseCase, OutboxDispatchProperties properties, Clock clock) {
+      OutboxFinalizeUseCase outboxFinalizeUseCase, OutboxDispatchProperties properties, Clock clock,
+      NotificationMetrics notificationMetrics) {
     this.outboxClaimUseCase = outboxClaimUseCase;
     this.outboxPublishUseCase = outboxPublishUseCase;
     this.outboxFinalizeUseCase = outboxFinalizeUseCase;
     this.properties = properties;
     this.clock = clock;
+    this.notificationMetrics = notificationMetrics;
   }
 
   @Override
@@ -55,6 +59,7 @@ public class OutboxDispatcher implements OutboxDispatchUseCase {
         handlePublishFailure(event, nowPerEvent, ex);
         continue;
       }
+      notificationMetrics.incrementOutboxPublished();
 
       markPublishedWithRetry(event, nowPerEvent);
     }
@@ -63,10 +68,12 @@ public class OutboxDispatcher implements OutboxDispatchUseCase {
 
   private void handlePublishFailure(OutboxEvent event, Instant now, Exception ex) {
     if (event.getAttemptCount() >= properties.maxAttempts()) {
+      notificationMetrics.incrementOutboxPublishFailed();
       outboxFinalizeUseCase.markFailed(event.getId(), now, ex.getMessage());
       return;
     }
     Instant next = computeBackoff(now, event.getAttemptCount());
+    notificationMetrics.incrementOutboxRescheduled();
     outboxFinalizeUseCase.reschedule(event.getId(), next, ex.getMessage());
   }
 

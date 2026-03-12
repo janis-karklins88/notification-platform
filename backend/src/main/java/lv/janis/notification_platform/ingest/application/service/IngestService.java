@@ -22,6 +22,7 @@ import lv.janis.notification_platform.outbox.domain.OutboxEvent;
 import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
 import lv.janis.notification_platform.outbox.domain.OutboxEventType;
 import lv.janis.notification_platform.tenant.application.port.out.TenantRepositoryPort;
+import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class IngestService implements IngestUseCase {
@@ -30,18 +31,21 @@ public class IngestService implements IngestUseCase {
   private final OutboxEventRepositoryPort outboxEventRepositoryPort;
   private final ObjectMapper objectMapper;
   private final Clock clock;
+  private final NotificationMetrics notificationMetrics;
 
   public IngestService(
       EventRepositoryPort eventRepositoryPort,
       TenantRepositoryPort tenantRepositoryPort,
       OutboxEventRepositoryPort outboxEventRepositoryPort,
       ObjectMapper objectMapper,
-      Clock clock) {
+      Clock clock,
+      NotificationMetrics notificationMetrics) {
     this.eventRepositoryPort = eventRepositoryPort;
     this.tenantRepositoryPort = tenantRepositoryPort;
     this.outboxEventRepositoryPort = outboxEventRepositoryPort;
     this.objectMapper = objectMapper;
     this.clock = clock;
+    this.notificationMetrics = notificationMetrics;
   }
 
   @Override
@@ -71,6 +75,7 @@ public class IngestService implements IngestUseCase {
     Event saved = eventRepositoryPort.save(event);
     OutboxEvent outboxEvent = createEventAcceptedOutboxEvent(saved, Instant.now(clock));
     outboxEventRepositoryPort.save(outboxEvent);
+    notificationMetrics.incrementEventAccepted();
     return new IngestResult(saved.getId(), saved.getStatus(), false);
   }
 
