@@ -1,0 +1,211 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+      "tooltip": {
+        "mode": "single",
+        "sort": "none"
+      },
+        "showPoints": "never"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_event_accepted_total[5m]))",
+          "legendFormat": "events accepted/s",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_deliveries_created_total[5m]))",
+          "legendFormat": "deliveries created/s",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Ingest & Delivery Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+      "tooltip": {
+        "mode": "single",
+        "sort": "none"
+      },
+        "showPoints": "never"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_delivery_success_total[5m]))",
+          "legendFormat": "delivery success/s",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_delivery_failure_total[5m]))",
+          "legendFormat": "delivery failure/s",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_delivery_attempt_started_total[5m]))",
+          "legendFormat": "attempts started/s",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Delivery Outcome",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+      "tooltip": {
+        "mode": "single",
+        "sort": "none"
+      },
+        "showPoints": "never"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_outbox_claimed_total[5m]))",
+          "legendFormat": "outbox claimed/s",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_outbox_published_total[5m]))",
+          "legendFormat": "outbox published/s",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_outbox_publish_failed_total[5m]))",
+          "legendFormat": "outbox publish failed/s",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(notification_outbox_rescheduled_total[5m]))",
+          "legendFormat": "outbox rescheduled/s",
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Outbox Pipeline",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "notification-platform"
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Notification Platform Overview",
+  "uid": "notification-platform-overview",
+  "version": 1,
+  "weekStart": ""
+}

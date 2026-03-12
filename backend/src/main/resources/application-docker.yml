@@ -42,7 +42,7 @@ management:
 
 outbox:
   dispatch:
-    enabled: false
+    enabled: true
     batch-size: 100
     fixed-delay-ms: 5000
     in-progress-timeout-ms: 60000
