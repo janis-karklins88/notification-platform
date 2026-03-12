@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,6 +30,7 @@ import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class DeliveryService implements DeliveryUseCase {
+  private static final Logger log = LoggerFactory.getLogger(DeliveryService.class);
 
   private final EventRepositoryPort eventRepositoryPort;
   private final SubscriptionRepositoryPort subscriptionRepositoryPort;
@@ -86,6 +89,9 @@ public class DeliveryService implements DeliveryUseCase {
       createdCount++;
     }
     notificationMetrics.incrementDeliveriesCreated(createdCount);
+    if (createdCount > 0) {
+      log.info("Deliveries created count={} eventId={} tenantId={}", createdCount, event.getId(), event.getTenantId());
+    }
 
     event.markRouted();
     eventRepositoryPort.save(event);

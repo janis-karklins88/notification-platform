@@ -60,6 +60,8 @@ public class OutboxDispatcher implements OutboxDispatchUseCase {
         continue;
       }
       notificationMetrics.incrementOutboxPublished();
+      log.info("Outbox event published outboxEventId={} tenantId={} attempt={}", event.getId(), event.getTenantId(),
+          event.getAttemptCount());
 
       markPublishedWithRetry(event, nowPerEvent);
     }
@@ -69,11 +71,15 @@ public class OutboxDispatcher implements OutboxDispatchUseCase {
   private void handlePublishFailure(OutboxEvent event, Instant now, Exception ex) {
     if (event.getAttemptCount() >= properties.maxAttempts()) {
       notificationMetrics.incrementOutboxPublishFailed();
+      log.warn("Outbox event publish failed permanently outboxEventId={} tenantId={} attempt={} reason={}", event.getId(),
+          event.getTenantId(), event.getAttemptCount(), ex.getMessage());
       outboxFinalizeUseCase.markFailed(event.getId(), now, ex.getMessage());
       return;
     }
     Instant next = computeBackoff(now, event.getAttemptCount());
     notificationMetrics.incrementOutboxRescheduled();
+    log.info("Outbox event rescheduled outboxEventId={} tenantId={} attempt={} nextAttemptAt={}", event.getId(),
+        event.getTenantId(), event.getAttemptCount(), next);
     outboxFinalizeUseCase.reschedule(event.getId(), next, ex.getMessage());
   }
 

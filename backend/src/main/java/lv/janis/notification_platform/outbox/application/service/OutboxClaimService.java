@@ -3,6 +3,8 @@ package lv.janis.notification_platform.outbox.application.service;
 import java.time.Instant;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -13,6 +15,8 @@ import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class OutboxClaimService implements OutboxClaimUseCase {
+  private static final Logger log = LoggerFactory.getLogger(OutboxClaimService.class);
+
   private final OutboxEventRepositoryPort outboxEventRepositoryPort;
   private final OutboxDispatchProperties outboxDispatchProperties;
   private final NotificationMetrics notificationMetrics;
@@ -36,6 +40,9 @@ public class OutboxClaimService implements OutboxClaimUseCase {
     }
     List<OutboxEvent> saved = outboxEventRepositoryPort.saveAll(claimedEvents);
     notificationMetrics.incrementOutboxClaimed(saved.size());
+    if (!saved.isEmpty()) {
+      log.info("Outbox events claimed count={} oldestEventId={}", saved.size(), saved.get(0).getId());
+    }
     return saved;
   }
 }

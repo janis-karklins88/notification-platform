@@ -4,6 +4,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -26,6 +28,8 @@ import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class IngestService implements IngestUseCase {
+  private static final Logger log = LoggerFactory.getLogger(IngestService.class);
+
   private final EventRepositoryPort eventRepositoryPort;
   private final TenantRepositoryPort tenantRepositoryPort;
   private final OutboxEventRepositoryPort outboxEventRepositoryPort;
@@ -76,6 +80,7 @@ public class IngestService implements IngestUseCase {
     OutboxEvent outboxEvent = createEventAcceptedOutboxEvent(saved, Instant.now(clock));
     outboxEventRepositoryPort.save(outboxEvent);
     notificationMetrics.incrementEventAccepted();
+    log.info("Event accepted eventId={} tenantId={} eventType={}", saved.getId(), saved.getTenantId(), saved.getEventType());
     return new IngestResult(saved.getId(), saved.getStatus(), false);
   }
 

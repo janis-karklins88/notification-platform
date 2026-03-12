@@ -3,6 +3,8 @@ package lv.janis.notification_platform.delivery.application.service;
 import java.time.Clock;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -18,6 +20,8 @@ import lv.janis.notification_platform.shared.metrics.NotificationMetrics;
 
 @Service
 public class WebhookDeliveryService implements WebhookDeliveryUseCase {
+  private static final Logger log = LoggerFactory.getLogger(WebhookDeliveryService.class);
+
   private final DeliveryRepositoryPort deliveryRepositoryPort;
   private final WebhookSenderPort webhookSenderPort;
   private final DeliveryProcessingService deliveryProcessingService;
@@ -61,19 +65,27 @@ public class WebhookDeliveryService implements WebhookDeliveryUseCase {
     delivery.markInProgress(clock.instant());
     deliveryRepositoryPort.save(delivery);
     notificationMetrics.incrementDeliveryAttemptStarted();
+    log.info("Delivery attempt started deliveryId={} tenantId={} endpointId={}", delivery.getId(),
+        delivery.getTenantId(), delivery.getEndpointId());
     try {
       webhookSenderPort.send(delivery);
       delivery.markDelivered(clock.instant());
       deliveryRepositoryPort.save(delivery);
       notificationMetrics.incrementDeliverySuccess();
+      log.info("Delivery succeeded deliveryId={} tenantId={} endpointId={}", delivery.getId(),
+          delivery.getTenantId(), delivery.getEndpointId());
     } catch (Exception ex) {
       if (DeliveryListenerFailurePolicy.isNonRetryable(ex)) {
         delivery.markFailed(clock.instant(), ex.getMessage());
         deliveryRepositoryPort.save(delivery);
         notificationMetrics.incrementDeliveryFailure();
+        log.warn("Delivery failed (non-retryable) deliveryId={} tenantId={} endpointId={} reason={}", delivery.getId(),
+            delivery.getTenantId(), delivery.getEndpointId(), ex.getMessage());
         throw new DeliveryNonRetryableException(ex);
       }
       notificationMetrics.incrementDeliveryRetryScheduled();
+      log.info("Delivery retry scheduled deliveryId={} tenantId={} endpointId={} reason={}", delivery.getId(),
+          delivery.getTenantId(), delivery.getEndpointId(), ex.getMessage());
       throw ex;
     }
 
