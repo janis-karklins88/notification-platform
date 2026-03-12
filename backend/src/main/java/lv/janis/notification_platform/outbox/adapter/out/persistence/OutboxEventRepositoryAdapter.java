@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import lv.janis.notification_platform.outbox.application.port.out.OutboxEventRepositoryPort;
+import lv.janis.notification_platform.outbox.application.port.out.OutboxFilter;
 import lv.janis.notification_platform.outbox.domain.OutboxEvent;
 import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
 import lv.janis.notification_platform.outbox.domain.OutboxEventType;
@@ -30,6 +33,35 @@ public class OutboxEventRepositoryAdapter implements OutboxEventRepositoryPort {
   @Override
   public List<OutboxEvent> saveAll(List<OutboxEvent> events) {
     return outboxEventJpaRepository.saveAll(events);
+  }
+
+  @Override
+  public Page<OutboxEvent> findAll(OutboxFilter filter, Pageable pageable) {
+    Specification<OutboxEvent> spec = (root, query, cb) -> cb.conjunction();
+
+    if (filter.status() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), filter.status()));
+    }
+    if (filter.tenantId() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("tenant").get("id"), filter.tenantId()));
+    }
+    if (filter.eventType() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("eventType"), filter.eventType()));
+    }
+    if (filter.aggregateType() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("aggregateType"), filter.aggregateType()));
+    }
+    if (filter.aggregateId() != null) {
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("aggregateId"), filter.aggregateId()));
+    }
+    if (filter.from() != null) {
+      spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), filter.from()));
+    }
+    if (filter.to() != null) {
+      spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), filter.to()));
+    }
+
+    return outboxEventJpaRepository.findAll(spec, pageable);
   }
 
   @Override
@@ -55,7 +87,7 @@ public class OutboxEventRepositoryAdapter implements OutboxEventRepositoryPort {
     return outboxEventJpaRepository.findByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAsc(
         status,
         now,
-        PageRequest.of(0, limit));
+        org.springframework.data.domain.PageRequest.of(0, limit));
   }
 
   @Override

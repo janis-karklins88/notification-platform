@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import lv.janis.notification_platform.outbox.domain.OutboxEvent;
 import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
 import lv.janis.notification_platform.outbox.domain.OutboxEventType;
@@ -14,6 +17,8 @@ public interface OutboxEventRepositoryPort {
   OutboxEvent save(OutboxEvent event);
 
   List<OutboxEvent> saveAll(List<OutboxEvent> events);
+
+  Page<OutboxEvent> findAll(OutboxFilter filter, Pageable pageable);
 
   Optional<OutboxEvent> findById(UUID id);
 

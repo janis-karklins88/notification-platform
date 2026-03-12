@@ -20,7 +20,7 @@ public record EndpointResponse(
   public static EndpointResponse from(Endpoint endpoint) {
     return new EndpointResponse(
         endpoint.getId(),
-        endpoint.getTenant().getId(),
+        endpoint.getTenantId(),
         endpoint.getType(),
         endpoint.getStatus(),
         endpoint.getConfig(),

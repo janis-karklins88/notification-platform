@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,7 +16,7 @@ import lv.janis.notification_platform.outbox.domain.OutboxEventAggregateType;
 import lv.janis.notification_platform.outbox.domain.OutboxEventType;
 import lv.janis.notification_platform.outbox.domain.OutboxStatus;
 
-public interface OutboxEventJpaRepository extends JpaRepository<OutboxEvent, UUID> {
+public interface OutboxEventJpaRepository extends JpaRepository<OutboxEvent, UUID>, JpaSpecificationExecutor<OutboxEvent> {
     Optional<OutboxEvent> findByTenant_IdAndAggregateTypeAndAggregateIdAndEventType(
             UUID tenantId,
             OutboxEventAggregateType aggregateType,
