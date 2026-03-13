@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import lv.janis.notification_platform.ingest.domain.Event;
@@ -14,5 +15,5 @@ public interface EventJpaRepository extends JpaRepository<Event, UUID> {
 
   Optional<Event> findByIdAndTenant_Id(UUID id, UUID tenantId);
 
-  List<Event> findTopNByStatus(EventStatus status, int n);
+  List<Event> findByStatus(EventStatus status, Pageable pageable);
 }

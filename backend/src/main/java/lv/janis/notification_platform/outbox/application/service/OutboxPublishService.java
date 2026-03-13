@@ -1,6 +1,8 @@
 package lv.janis.notification_platform.outbox.application.service;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.ReturnedMessage;
@@ -49,17 +51,19 @@ public class OutboxPublishService implements OutboxPublishUseCase {
   }
 
   private void waitForBrokerConfirm(OutboxEvent event, CorrelationData correlationData) {
+    CorrelationData.Confirm confirm;
     try {
-      CorrelationData.Confirm confirm = correlationData.getFuture().get(CONFIRM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-      if (confirm == null || !confirm.isAck()) {
-        String reason = confirm == null ? "no confirm received" : confirm.getReason();
-        throw new IllegalStateException("Broker did not ack outbox event " + event.getId() + ": " + reason);
-      }
+      confirm = correlationData.getFuture().get(CONFIRM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Interrupted while waiting broker confirm for outbox event " + event.getId(), ex);
-    } catch (Exception ex) {
+    } catch (ExecutionException | TimeoutException ex) {
       throw new IllegalStateException("Failed waiting broker confirm for outbox event " + event.getId(), ex);
+    }
+
+    if (confirm == null || !confirm.isAck()) {
+      String reason = confirm == null ? "no confirm received" : confirm.getReason();
+      throw new IllegalStateException("Broker did not ack outbox event " + event.getId() + ": " + reason);
     }
   }
 

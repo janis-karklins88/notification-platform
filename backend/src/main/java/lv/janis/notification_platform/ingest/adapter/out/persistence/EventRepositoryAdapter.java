@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import lv.janis.notification_platform.ingest.application.port.out.EventRepositoryPort;
 import lv.janis.notification_platform.ingest.domain.Event;
@@ -40,6 +42,6 @@ public class EventRepositoryAdapter implements EventRepositoryPort {
 
   @Override
   public List<Event> findTopNByStatus(EventStatus status, int n) {
-    return eventJpaRepository.findTopNByStatus(status, n);
+    return eventJpaRepository.findByStatus(status, PageRequest.of(0, n, Sort.by("receivedAt")));
   }
 }
