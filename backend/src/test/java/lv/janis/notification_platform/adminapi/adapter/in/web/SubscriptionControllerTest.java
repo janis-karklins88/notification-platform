@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lv.janis.notification_platform.adminapi.application.exception.BadRequestException;
 import lv.janis.notification_platform.adminapi.application.exception.NotFoundException;
 import lv.janis.notification_platform.adminapi.application.port.in.CreateSubscriptionCommand;
-import lv.janis.notification_platform.adminapi.application.port.in.ListSubscriptionsQuery;
 import lv.janis.notification_platform.adminapi.application.port.in.SubscriptionUseCase;
 import lv.janis.notification_platform.auth.adapter.in.security.ApiKeyAuthenticationFilter;
 import lv.janis.notification_platform.routing.domain.Subscription;
@@ -29,9 +28,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(SubscriptionController.class)
@@ -44,10 +43,10 @@ class SubscriptionControllerTest {
   @Autowired
   private ObjectMapper objectMapper;
 
-  @MockBean
+  @MockitoBean
   private SubscriptionUseCase subscriptionUseCase;
 
-  @MockBean
+  @MockitoBean
   private ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
 
   @Test
