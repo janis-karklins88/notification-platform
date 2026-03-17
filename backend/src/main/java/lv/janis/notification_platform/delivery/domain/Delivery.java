@@ -123,7 +123,10 @@ public class Delivery {
   }
 
   public UUID getTenantId() {
-    return tenantId;
+    if (tenantId != null) {
+      return tenantId;
+    }
+    return tenant != null ? tenant.getId() : null;
   }
 
   public Event getEvent() {
@@ -131,7 +134,10 @@ public class Delivery {
   }
 
   public UUID getEventId() {
-    return eventId;
+    if (eventId != null) {
+      return eventId;
+    }
+    return event != null ? event.getId() : null;
   }
 
   public Subscription getSubscription() {
@@ -139,7 +145,10 @@ public class Delivery {
   }
 
   public UUID getSubscriptionId() {
-    return subscriptionId;
+    if (subscriptionId != null) {
+      return subscriptionId;
+    }
+    return subscription != null ? subscription.getId() : null;
   }
 
   public Endpoint getEndpoint() {
@@ -147,7 +156,10 @@ public class Delivery {
   }
 
   public UUID getEndpointId() {
-    return endpointId;
+    if (endpointId != null) {
+      return endpointId;
+    }
+    return endpoint != null ? endpoint.getId() : null;
   }
 
   public DeliveryStatus getStatus() {

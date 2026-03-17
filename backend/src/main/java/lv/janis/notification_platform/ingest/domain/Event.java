@@ -112,7 +112,10 @@ public class Event {
   }
 
   public UUID getTenantId() {
-    return tenantId;
+    if (tenantId != null) {
+      return tenantId;
+    }
+    return tenant != null ? tenant.getId() : null;
   }
 
   public String getEventType() {
