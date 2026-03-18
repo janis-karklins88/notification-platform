@@ -35,11 +35,11 @@ import lv.janis.notification_platform.tenant.domain.Tenant;
 import lv.janis.notification_platform.tenant.domain.TenantStatus;
 
 @DataJpaTest
-@Import({JpaAuditingConfig.class, OutboxMonitoringServiceIntegrationTest.Config.class})
+@Import({ JpaAuditingConfig.class, OutboxMonitoringServiceIntegrationTest.Config.class })
 @TestPropertySource(properties = {
     "spring.datasource.url=jdbc:h2:mem:notification_platform_outbox_monitoring;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
     "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.flyway.enabled=false"})
+    "spring.flyway.enabled=false" })
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 class OutboxMonitoringServiceIntegrationTest {
 
@@ -95,7 +95,7 @@ class OutboxMonitoringServiceIntegrationTest {
   void listOutboxEventsSupportsTimeRangeFilter() throws InterruptedException {
     Tenant tenant = tenantRepository.save(new Tenant("tenant-chrono", "Tenant Chrono", TenantStatus.ACTIVE));
 
-    OutboxEvent first = saveWithStatusAndType(
+    saveWithStatusAndType(
         tenant,
         OutboxEventAggregateType.EVENT,
         OutboxEventType.EVENT_ACCEPTED,
@@ -118,8 +118,8 @@ class OutboxMonitoringServiceIntegrationTest {
         null,
         from,
         to);
-    List<OutboxEvent> filtered =
-        outboxEventRepositoryAdapter.findAll(narrow, org.springframework.data.domain.PageRequest.of(0, 50)).toList();
+    List<OutboxEvent> filtered = outboxEventRepositoryAdapter
+        .findAll(narrow, org.springframework.data.domain.PageRequest.of(0, 50)).toList();
 
     assertEquals(1, filtered.size());
     assertEquals(second.getId(), filtered.get(0).getId());

@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lv.janis.notification_platform.tenant.application.port.out.TenantFilter;
@@ -100,7 +101,7 @@ class TenantRepositoryAdapterTest {
     lenient().when(cb.conjunction()).thenReturn(predicate);
     lenient().when(cb.and(any(Predicate.class), any(Predicate.class))).thenReturn(predicate);
     lenient().when(cb.equal(any(), any())).thenReturn(predicate);
-    lenient().when(cb.lower(any())).thenReturn(mock(jakarta.persistence.criteria.Expression.class));
+    lenient().when(cb.lower(any())).thenReturn(stringExpressionMock());
     lenient().when(cb.like(any(), eq("%acme%"))).thenReturn(predicate);
     lenient().when(cb.greaterThanOrEqualTo(any(), eq(createdFrom))).thenReturn(predicate);
     lenient().when(cb.lessThanOrEqualTo(any(), eq(createdTo))).thenReturn(predicate);
@@ -125,5 +126,10 @@ class TenantRepositoryAdapterTest {
   @SuppressWarnings("unchecked")
   private static Root<Tenant> deepRootMock() {
     return (Root<Tenant>) mock(Root.class, Answers.RETURNS_DEEP_STUBS);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Expression<String> stringExpressionMock() {
+    return (Expression<String>) mock(Expression.class);
   }
 }

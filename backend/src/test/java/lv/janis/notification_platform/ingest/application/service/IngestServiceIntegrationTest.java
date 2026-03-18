@@ -3,7 +3,6 @@ package lv.janis.notification_platform.ingest.application.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -11,7 +10,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,11 +44,11 @@ import lv.janis.notification_platform.tenant.domain.Tenant;
 import lv.janis.notification_platform.tenant.domain.TenantStatus;
 
 @DataJpaTest
-@Import({JpaAuditingConfig.class, IngestServiceIntegrationTest.Config.class})
+@Import({ JpaAuditingConfig.class, IngestServiceIntegrationTest.Config.class })
 @TestPropertySource(properties = {
     "spring.datasource.url=jdbc:h2:mem:notification_platform_ingest_service;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
     "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.flyway.enabled=false"})
+    "spring.flyway.enabled=false" })
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 class IngestServiceIntegrationTest {
   private static final Instant NOW = Instant.parse("2026-02-08T10:00:00Z");
@@ -91,11 +89,12 @@ class IngestServiceIntegrationTest {
     assertEquals("order.created", storedEvent.get().getEventType());
     assertEquals(payload, storedEvent.get().getPayload());
 
-    Optional<OutboxEvent> storedOutbox = outboxEventRepository.findByTenant_IdAndAggregateTypeAndAggregateIdAndEventType(
-        tenant.getId(),
-        OutboxEventAggregateType.EVENT,
-        storedEvent.get().getId(),
-        OutboxEventType.EVENT_ACCEPTED);
+    Optional<OutboxEvent> storedOutbox = outboxEventRepository
+        .findByTenant_IdAndAggregateTypeAndAggregateIdAndEventType(
+            tenant.getId(),
+            OutboxEventAggregateType.EVENT,
+            storedEvent.get().getId(),
+            OutboxEventType.EVENT_ACCEPTED);
     assertTrue(storedOutbox.isPresent());
     assertEquals(OutboxStatus.PENDING, storedOutbox.get().getStatus());
     assertEquals(storedEvent.get().getId(), storedOutbox.get().getAggregateId());
