@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -27,10 +28,19 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.core.annotation.Order;
 
 import lv.janis.notification_platform.auth.adapter.in.security.ApiKeyAuthenticationFilter;
+import lv.janis.notification_platform.auth.application.port.out.ApiKeyRepositoryPort;
+import lv.janis.notification_platform.auth.application.service.ApiKeyHasher;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+  @Bean
+  ApiKeyAuthenticationFilter apiKeyAuthenticationFilter(
+      ApiKeyRepositoryPort apiKeyRepositoryPort,
+      ApiKeyHasher apiKeyHasher) {
+    return new ApiKeyAuthenticationFilter(apiKeyRepositoryPort, apiKeyHasher);
+  }
 
   @Bean
   @Order(1)
@@ -39,6 +49,7 @@ public class SecurityConfig {
     return http
         .securityMatcher("/admin/**")
         .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
         .build();

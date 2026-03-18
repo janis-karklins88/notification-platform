@@ -22,6 +22,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
@@ -31,9 +32,11 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lv.janis.notification_platform.delivery.application.exception.DeliveryNonRetryableException;
+import lv.janis.notification_platform.delivery.application.port.out.WebhookSenderPort;
 import lv.janis.notification_platform.delivery.domain.Delivery;
 
-public class WebhookSenderAdapter implements DisposableBean {
+@Component
+public class WebhookSenderAdapter implements WebhookSenderPort, DisposableBean {
 
   private static final Set<Integer> NON_RETRYABLE_HTTP_STATUSES = Set.of(400, 401, 403, 404, 405, 409, 410, 413, 414,
       415, 422,
@@ -53,6 +56,7 @@ public class WebhookSenderAdapter implements DisposableBean {
 
   }
 
+  @Override
   public void send(Delivery delivery) {
 
     JsonNode config = delivery.getEndpoint().getConfig();

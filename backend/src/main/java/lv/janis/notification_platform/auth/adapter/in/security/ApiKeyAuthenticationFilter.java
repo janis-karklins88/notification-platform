@@ -8,7 +8,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -22,7 +21,6 @@ import lv.janis.notification_platform.auth.application.service.ApiKeyHasher;
 import lv.janis.notification_platform.auth.domain.ApiKey;
 import lv.janis.notification_platform.auth.domain.ApiKeyStatus;
 
-@Component
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
   private static final String API_KEY_HEADER = "X-API-Key";
   private static final String BEARER_PREFIX = "Bearer ";
@@ -67,6 +65,12 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     SecurityContextHolder.setContext(context);
 
     filterChain.doFilter(request, response);
+  }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getServletPath();
+    return !"/ingest".equals(path) && !path.startsWith("/ingest/");
   }
 
   private String resolveRawApiKey(HttpServletRequest request) {
