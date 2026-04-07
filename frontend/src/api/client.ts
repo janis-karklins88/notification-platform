@@ -6,12 +6,11 @@ type ApiRequestInit = RequestInit & {
 }
 
 export async function apiFetch({ path, headers, ...init }: ApiRequestInit) {
-
   await keycloak.updateToken(30)
-  const token = keycloak.token;
+  const token = keycloak.token
 
-  if(!token){
-    throw new Error('Auth token is missing');
+  if (!token) {
+    throw new Error('Auth token is missing')
   }
 
   const response = await fetch(`${env.apiBaseUrl}${path}`, {
@@ -24,7 +23,18 @@ export async function apiFetch({ path, headers, ...init }: ApiRequestInit) {
   })
 
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`)
+    let errorMessage = `API request failed with status ${response.status}`
+
+    try {
+      const errorResponse = (await response.json()) as { error?: string }
+      if (errorResponse.error) {
+        errorMessage = errorResponse.error
+      }
+    } catch {
+      // Ignore JSON parsing failures and fall back to the status-based message.
+    }
+
+    throw new Error(errorMessage)
   }
 
   if (response.status === 204) {

@@ -2,29 +2,35 @@ package lv.janis.notification_platform.config;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.core.annotation.Order;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lv.janis.notification_platform.auth.adapter.in.security.ApiKeyAuthenticationFilter;
 import lv.janis.notification_platform.auth.application.port.out.ApiKeyRepositoryPort;
@@ -47,6 +53,7 @@ public class SecurityConfig {
   SecurityFilterChain adminSecurityWithJwt(HttpSecurity http) throws Exception {
     return http
         .securityMatcher("/admin/**")
+        .cors(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
@@ -60,6 +67,7 @@ public class SecurityConfig {
   SecurityFilterChain adminSecurityWithoutJwt(HttpSecurity http) throws Exception {
     return http
         .securityMatcher("/admin/**")
+        .cors(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(auth -> auth.anyRequest().denyAll())
         .build();
@@ -71,6 +79,7 @@ public class SecurityConfig {
       throws Exception {
     return http
         .securityMatcher("/ingest/**")
+        .cors(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
@@ -82,11 +91,30 @@ public class SecurityConfig {
   @Order(3)
   SecurityFilterChain appSecurity(HttpSecurity http) throws Exception {
     return http
+        .cors(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/boot-check", "/actuator/health", "/actuator/info").permitAll()
             .anyRequest().permitAll())
         .build();
+  }
+
+  @Bean
+  CorsConfigurationSource corsConfigurationSource(
+      @Value("${app.cors.allowed-origins:http://localhost:5173}") String allowedOriginsProperty) {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(Arrays.stream(allowedOriginsProperty.split(","))
+        .map(String::trim)
+        .filter(origin -> !origin.isEmpty())
+        .toList());
+    configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+    configuration.setExposedHeaders(List.of("Location"));
+    configuration.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
   }
 
   private Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthenticationConverter() {
@@ -111,6 +139,15 @@ public class SecurityConfig {
       Object realmAccess = jwt.getClaim("realm_access");
       if (realmAccess instanceof Map<?, ?> realmAccessMap) {
         authorities.addAll(extractRoleAuthorities(realmAccessMap.get("roles")));
+      }
+
+      Object resourceAccess = jwt.getClaim("resource_access");
+      if (resourceAccess instanceof Map<?, ?> resourceAccessMap) {
+        for (Object resourceValue : resourceAccessMap.values()) {
+          if (resourceValue instanceof Map<?, ?> clientAccessMap) {
+            authorities.addAll(extractRoleAuthorities(clientAccessMap.get("roles")));
+          }
+        }
       }
 
       return authorities;

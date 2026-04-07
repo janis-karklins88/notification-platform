@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { RouterProvider } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 import { keycloak } from '../auth/keycloak'
 import { router } from '../routes'
@@ -51,5 +53,17 @@ export function App() {
     return <div>Loading authentication...</div>
   }
 
-  return <RouterProvider router={router} />
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastContainer
+        autoClose={3000}
+        closeOnClick
+        newestOnTop
+        pauseOnFocusLoss={false}
+        position="top-right"
+        theme="light"
+      />
+    </>
+  )
 }
