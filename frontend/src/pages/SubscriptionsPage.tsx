@@ -161,7 +161,7 @@ export function SubscriptionsPage() {
         }
         hasNext={data?.hasNext ?? false}
         hasPrevious={data?.hasPrevious ?? false}
-        loading={isPending}
+        loading={Boolean(filters.tenantId) && isPending}
         onDeactivate={(subscriptionId) =>
           subscriptionActionMutation.mutate({
             action: 'deactivate',
@@ -182,6 +182,7 @@ export function SubscriptionsPage() {
           })
         }
         page={data?.page ?? filters.page ?? 0}
+        showEmptyState={!filters.tenantId || (data?.items?.length ?? 0) === 0}
         subscriptions={data?.items ?? []}
         totalElements={data?.totalElements ?? 0}
         totalPages={data?.totalPages ?? 0}

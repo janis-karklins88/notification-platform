@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+Event type: <span th:text="${eventType}">event.type</span>
+
+Event ID: <span th:text="${eventId}">event-id</span>
+Tenant ID: <span th:text="${tenantId}">tenant-id</span>
+Subscription ID: <span th:text="${subscriptionId}">subscription-id</span>
+Occurred at: <span th:text="${occurredAt}">2026-04-08T08:00:00Z</span>
+
+Payload:
+<pre th:text="${payloadJson}">{}</pre>
+</body>
+</html>

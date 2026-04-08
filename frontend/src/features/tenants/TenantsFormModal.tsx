@@ -82,7 +82,7 @@ export function TenantsFormModal({
       setError('')
       tenantMutation.reset()
     }
-  }, [open, tenant, tenantMutation])
+  }, [open, tenant])
 
   if (!open) {
     return null

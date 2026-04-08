@@ -2,6 +2,7 @@ import type { Endpoint } from './types'
 
 type EndpointsTableProps = {
   endpoints: Endpoint[]
+  tenantNamesById: Record<string, string>
   loading: boolean
   page: number
   totalPages: number
@@ -9,6 +10,7 @@ type EndpointsTableProps = {
   hasNext: boolean
   hasPrevious: boolean
   onPageChange: (page: number) => void
+  onViewDetails: (endpoint: Endpoint) => void
   onEdit: (endpoint: Endpoint) => void
   onDeactivate: (endpointId: string) => void
   onReactivate: (endpointId: string) => void
@@ -19,13 +21,9 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString()
 }
 
-function formatConfigPreview(endpoint: Endpoint) {
-  const serialized = JSON.stringify(endpoint.config)
-  return serialized.length > 72 ? `${serialized.slice(0, 72)}...` : serialized
-}
-
 export function EndpointsTable({
   endpoints,
+  tenantNamesById,
   loading,
   page,
   totalPages,
@@ -33,6 +31,7 @@ export function EndpointsTable({
   hasNext,
   hasPrevious,
   onPageChange,
+  onViewDetails,
   onEdit,
   onDeactivate,
   onReactivate,
@@ -72,9 +71,6 @@ export function EndpointsTable({
                 Status
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Config
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Created
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -85,17 +81,23 @@ export function EndpointsTable({
           <tbody className="divide-y divide-slate-200 bg-white">
             {endpoints.map((endpoint) => (
               <tr key={endpoint.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 text-sm text-slate-600">{endpoint.tenantId}</td>
+                <td className="px-4 py-3 text-sm text-slate-600">
+                  {tenantNamesById[endpoint.tenantId] ?? endpoint.tenantId}
+                </td>
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">{endpoint.type}</td>
                 <td className="px-4 py-3 text-sm text-slate-600">{endpoint.status}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">
-                  {formatConfigPreview(endpoint)}
-                </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
                   {formatDate(endpoint.createdAt)}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-2">
+                    <button
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                      onClick={() => onViewDetails(endpoint)}
+                      type="button"
+                    >
+                      Details
+                    </button>
                     <button
                       className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
                       onClick={() => onEdit(endpoint)}

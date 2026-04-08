@@ -1,54 +1,48 @@
-import type { Subscription } from './types'
+import type { Delivery } from './types'
 
-type SubscriptionsTableProps = {
-  subscriptions: Subscription[]
+type DeliveriesTableProps = {
+  deliveries: Delivery[]
+  tenantNamesById: Record<string, string>
   loading: boolean
-  emptyMessage: string
-  showEmptyState: boolean
   page: number
   totalPages: number
   totalElements: number
   hasNext: boolean
   hasPrevious: boolean
   onPageChange: (page: number) => void
-  onDeactivate: (subscriptionId: string) => void
-  onReactivate: (subscriptionId: string) => void
-  onDelete: (subscriptionId: string) => void
+  onViewDetails: (delivery: Delivery) => void
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleString()
+function formatDate(value: string | null) {
+  return value ? new Date(value).toLocaleString() : 'Never'
 }
 
-export function SubscriptionsTable({
-  subscriptions,
+export function DeliveriesTable({
+  deliveries,
+  tenantNamesById,
   loading,
-  emptyMessage,
-  showEmptyState,
   page,
   totalPages,
   totalElements,
   hasNext,
   hasPrevious,
   onPageChange,
-  onDeactivate,
-  onReactivate,
-  onDelete,
-}: SubscriptionsTableProps) {
+  onViewDetails,
+}: DeliveriesTableProps) {
   const shouldShowPagination = totalPages > 1
 
   if (loading) {
     return (
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-600">Loading subscriptions...</p>
+        <p className="text-sm text-slate-600">Loading deliveries...</p>
       </section>
     )
   }
 
-  if (subscriptions.length === 0 && showEmptyState) {
+  if (deliveries.length === 0) {
     return (
       <section className="rounded-xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-600">{emptyMessage}</p>
+        <p className="text-sm text-slate-600">No deliveries found.</p>
       </section>
     )
   }
@@ -60,13 +54,19 @@ export function SubscriptionsTable({
           <thead className="bg-slate-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Event type
+                Tenant
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Endpoint
+                Channel
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Event ID
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Last attempt
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Created
@@ -77,49 +77,32 @@ export function SubscriptionsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {subscriptions.map((subscription) => (
-              <tr key={subscription.id} className="hover:bg-slate-50">
+            {deliveries.map((delivery) => (
+              <tr key={delivery.id} className="hover:bg-slate-50">
+                <td className="px-4 py-3 text-sm text-slate-600">
+                  {tenantNamesById[delivery.tenantId] ?? delivery.tenantId}
+                </td>
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                  {subscription.eventType}
+                  {delivery.channel}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600">{delivery.status}</td>
+                <td className="px-4 py-3 font-mono text-sm text-slate-600">
+                  {delivery.eventId}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
-                  {subscription.endpointID}
+                  {formatDate(delivery.lastAttemptAt)}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
-                  {subscription.status}
+                  {formatDate(delivery.createdAt)}
                 </td>
-                <td className="px-4 py-3 text-sm text-slate-600">
-                  {formatDate(subscription.createdAt)}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    {subscription.status === 'ACTIVE' ? (
-                      <button
-                        className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:border-amber-400 hover:bg-amber-50"
-                        onClick={() => onDeactivate(subscription.id)}
-                        type="button"
-                      >
-                        Pause
-                      </button>
-                    ) : subscription.status === 'PAUSED' ? (
-                      <button
-                        className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-50"
-                        onClick={() => onReactivate(subscription.id)}
-                        type="button"
-                      >
-                        Reactivate
-                      </button>
-                    ) : null}
-                    {subscription.status !== 'DELETED' ? (
-                      <button
-                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-50"
-                        onClick={() => onDelete(subscription.id)}
-                        type="button"
-                      >
-                        Delete
-                      </button>
-                    ) : null}
-                  </div>
+                <td className="px-4 py-3 text-right">
+                  <button
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                    onClick={() => onViewDetails(delivery)}
+                    type="button"
+                  >
+                    Details
+                  </button>
                 </td>
               </tr>
             ))}
@@ -129,7 +112,7 @@ export function SubscriptionsTable({
       {shouldShowPagination ? (
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3">
           <p className="text-sm text-slate-600">
-            Page {page + 1} of {totalPages}. Total subscriptions: {totalElements}
+            Page {page + 1} of {totalPages}. Total deliveries: {totalElements}
           </p>
           <div className="flex items-center gap-2">
             <button

@@ -58,6 +58,9 @@ export function TenantsTable({
                 Slug
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                ID
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Status
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -75,6 +78,7 @@ export function TenantsTable({
                   {tenant.name}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">{tenant.slug}</td>
+                <td className="px-4 py-3 font-mono text-sm text-slate-600">{tenant.id}</td>
                 <td className="px-4 py-3 text-sm text-slate-600">{tenant.status}</td>
                 <td className="px-4 py-3 text-sm text-slate-600">
                   {formatDate(tenant.createdAt)}

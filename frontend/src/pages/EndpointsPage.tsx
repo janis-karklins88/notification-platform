@@ -8,6 +8,7 @@ import {
   reactivateEndpoint,
 } from '../api/endpointsApi'
 import { listTenants } from '../api/tenantsApi'
+import { EndpointDetailsModal } from '../features/endpoints/EndpointDetailsModal'
 import { EndpointsFilters } from '../features/endpoints/EndpointsFilters'
 import { EndpointsFormModal } from '../features/endpoints/EndpointsFormModal'
 import { EndpointsTable } from '../features/endpoints/EndpointsTable'
@@ -18,6 +19,7 @@ export function EndpointsPage() {
   const [filters, setFilters] = useState<EndpointFilter>({ page: 0, size: 20 })
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null)
+  const [detailsEndpoint, setDetailsEndpoint] = useState<Endpoint | null>(null)
   const queryClient = useQueryClient()
 
   const {
@@ -34,6 +36,10 @@ export function EndpointsPage() {
     queryKey: ['tenants', 'options'],
     queryFn: () => listTenants({ page: 0, size: 100 }),
   })
+
+  const tenantNamesById = Object.fromEntries(
+    (tenantOptions?.items ?? []).map((tenant) => [tenant.id, tenant.name]),
+  )
 
   const endpointActionMutation = useMutation({
     mutationFn: async (variables: {
@@ -80,6 +86,14 @@ export function EndpointsPage() {
   function handleFormClose() {
     setIsFormModalOpen(false)
     setSelectedEndpoint(null)
+  }
+
+  function handleDetailsOpen(endpoint: Endpoint) {
+    setDetailsEndpoint(endpoint)
+  }
+
+  function handleDetailsClose() {
+    setDetailsEndpoint(null)
   }
 
   function handleFiltersChange(next: Partial<EndpointFilter>) {
@@ -167,7 +181,9 @@ export function EndpointsPage() {
         onEdit={handleEdit}
         onPageChange={handlePageChange}
         onReactivate={handleReactivate}
+        onViewDetails={handleDetailsOpen}
         page={data?.page ?? filters.page ?? 0}
+        tenantNamesById={tenantNamesById}
         totalElements={data?.totalElements ?? 0}
         totalPages={data?.totalPages ?? 0}
       />
@@ -177,6 +193,17 @@ export function EndpointsPage() {
         onClose={handleFormClose}
         open={isFormModalOpen}
         tenantOptions={tenantOptions?.items ?? []}
+      />
+
+      <EndpointDetailsModal
+        endpoint={detailsEndpoint}
+        onClose={handleDetailsClose}
+        open={Boolean(detailsEndpoint)}
+        tenantName={
+          detailsEndpoint
+            ? tenantNamesById[detailsEndpoint.tenantId] ?? detailsEndpoint.tenantId
+            : undefined
+        }
       />
     </section>
   )

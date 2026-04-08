@@ -4,6 +4,31 @@ export type EndpointStatus = 'ACTIVE' | 'INACTIVE' | 'DISABLED'
 
 export type EndpointConfig = Record<string, unknown>
 
+export type EmailTemplate = {
+  name: string
+  displayName: string
+  description: string
+  bodyType: 'text' | 'html' | string
+}
+
+export type EmailEndpointConfig = {
+  recipients: string[]
+  from?: string
+  replyTo?: string
+  subjectTemplate?: string
+  bodyTemplate?: string
+  bodyType?: 'text' | 'html'
+  templateName?: string
+}
+
+export type WebhookEndpointConfig = {
+  url: string
+  headers?: Record<string, string>
+  connectTimeoutMs?: number
+  responseTimeoutMs?: number
+  connectionRequestTimeoutMs?: number
+}
+
 export type Endpoint = {
   id: string
   tenantId: string

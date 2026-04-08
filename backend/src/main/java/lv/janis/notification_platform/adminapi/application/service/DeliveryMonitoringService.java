@@ -74,6 +74,10 @@ public class DeliveryMonitoringService implements DeliveryMonitoringUseCase {
   }
 
   private EndpointType resolveChannel(String channel) {
+    if (channel == null || channel.isBlank()) {
+      return null;
+    }
+
     try {
       return EndpointType.valueOf(channel.trim().toUpperCase());
     } catch (IllegalArgumentException ex) {

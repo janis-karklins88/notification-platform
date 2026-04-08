@@ -71,7 +71,7 @@ export function SubscriptionsFormModal({
       setError('')
       subscriptionMutation.reset()
     }
-  }, [open, tenantOptions, subscriptionMutation])
+  }, [open, tenantOptions])
 
   useEffect(() => {
     setFormState((current) => ({

@@ -44,7 +44,7 @@ export function ApiKeysFormModal({
       setCreatedApiKey(null)
       createApiKeyMutation.reset()
     }
-  }, [open, tenantOptions, createApiKeyMutation])
+  }, [open, tenantOptions])
 
   if (!open) {
     return null
