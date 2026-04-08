@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 
 import { AppLayout } from '../layouts/AppLayout'
+import { ApiKeysPage } from '../pages/ApiKeysPage'
 import { DeliveryMonitoringPage } from '../pages/DeliveryMonitoringPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { EndpointsPage } from '../pages/EndpointsPage'
@@ -17,6 +18,8 @@ export const router = createBrowserRouter([
       { path: 'tenants', element: <TenantsPage /> },
       { path: 'endpoints', element: <EndpointsPage /> },
       { path: 'subscriptions', element: <SubscriptionsPage /> },
+      { path: 'api-keys', element: <ApiKeysPage /> },
+      { path: 'apikeys', element: <ApiKeysPage /> },
       { path: 'deliveries', element: <DeliveryMonitoringPage /> },
     ],
   },

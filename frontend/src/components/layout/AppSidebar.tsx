@@ -5,8 +5,8 @@ const navItems = [
   { to: '/tenants', label: 'Tenants' },
   { to: '/endpoints', label: 'Endpoints' },
   { to: '/subscriptions', label: 'Subscriptions' },
+  { to: '/api-keys', label: 'API Keys' },
   { to: '/deliveries', label: 'Deliveries' },
-  { to: '/apikeys', label: 'API Keys' },
 ] as const
 
 function getNavLinkClassName({ isActive }: { isActive: boolean }) {
@@ -19,24 +19,21 @@ function getNavLinkClassName({ isActive }: { isActive: boolean }) {
 }
 
 export const Sidebar = () => {
+  return (
+    <aside className="w-56 border-r border-slate-200 bg-white px-4 py-6">
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+          Admin panel
+        </p>
+      </div>
 
-return (
-          <aside className="w-56 border-r border-slate-200 bg-white px-4 py-6">
-          <div className="mb-8 ">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-              Admin panel
-            </p>
-          </div>
-
-          <nav className="flex flex-col gap-1">
-            {navItems.map((item) => (
-
-              <NavLink key={item.to} className={getNavLinkClassName} to={item.to}>
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-          </aside>
-)
-
+      <nav className="flex flex-col gap-1">
+        {navItems.map((item) => (
+          <NavLink key={item.to} className={getNavLinkClassName} to={item.to}>
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+    </aside>
+  )
 }
