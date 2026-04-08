@@ -1,44 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { listTenants } from '../api/tenantsApi'
 import { TenantsFilters } from '../features/tenants/TenantsFilters'
 import { TenantsFormModal } from '../features/tenants/TenantsFormModal'
 import { TenantsTable } from '../features/tenants/TenantsTable'
 import {
-  type PageResponse,
   type Tenant,
   type TenantFilter,
 } from '../features/tenants/types'
 
 export function TenantsPage() {
   const [filters, setFilters] = useState<TenantFilter>({ page: 0, size: 20 })
-  const [data, setData] = useState<PageResponse<Tenant> | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
-  const [refreshNonce, setRefreshNonce] = useState(0)
 
-  useEffect(() => {
-    async function loadTenants() {
-      try {
-        setLoading(true)
-        setError('')
-        const response = await listTenants(filters)
-        setData(response)
-      } catch (err) {
-        if (err instanceof Error) {
-      setError(err.message)
-      } else {
-      setError('Failed to load tenants')
-      }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadTenants()
-  }, [filters, refreshNonce])
+  const {
+    data,
+    error,
+    isPending,
+    refetch,
+  } = useQuery({
+    queryKey: ['tenants', filters],
+    queryFn: () => listTenants(filters),
+  })
 
   function handleEdit(tenant: Tenant) {
     setSelectedTenant(tenant)
@@ -55,10 +40,6 @@ export function TenantsPage() {
     setSelectedTenant(null)
   }
 
-  function handleFormSuccess() {
-    setRefreshNonce((current) => current + 1)
-  }
-
   function handleFiltersChange(next: Partial<TenantFilter>) {
     setFilters((current) => ({
       ...current,
@@ -72,7 +53,7 @@ export function TenantsPage() {
   }
 
   function handleRefresh() {
-    setRefreshNonce((current) => current + 1)
+    refetch()
   }
 
   function handlePageChange(page: number) {
@@ -113,9 +94,9 @@ export function TenantsPage() {
         value={filters}
       />
 
-      {error ? (
+      {error instanceof Error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {error.message}
         </div>
       ) : null}
 
@@ -124,7 +105,7 @@ export function TenantsPage() {
         hasPrevious={data?.hasPrevious ?? false}
         onPageChange={handlePageChange}
         tenants={data?.items ?? []}
-        loading={loading}
+        loading={isPending}
         onEdit={handleEdit}
         page={data?.page ?? filters.page ?? 0}
         totalElements={data?.totalElements ?? 0}
@@ -133,7 +114,6 @@ export function TenantsPage() {
 
       <TenantsFormModal
         onClose={handleFormClose}
-        onSuccess={handleFormSuccess}
         open={isFormModalOpen}
         tenant={selectedTenant}
       />

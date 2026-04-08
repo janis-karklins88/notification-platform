@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RouterProvider } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -7,6 +8,7 @@ import { keycloak } from '../auth/keycloak'
 import { router } from '../routes'
 
 let keycloakInitPromise: Promise<boolean> | null = null
+const queryClient = new QueryClient()
 
 function initKeycloak() {
   if (!keycloakInitPromise) {
@@ -54,7 +56,7 @@ export function App() {
   }
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
       <ToastContainer
         autoClose={3000}
@@ -64,6 +66,6 @@ export function App() {
         position="top-right"
         theme="light"
       />
-    </>
+    </QueryClientProvider>
   )
 }

@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { createTenant, editTenant } from '../../api/tenantsApi'
 import { notifyCreated, notifyUpdated } from '../../lib/notifications'
@@ -12,7 +13,6 @@ import type {
 type TenantsFormModalProps = {
   open: boolean
   onClose: () => void
-  onSuccess: () => void
   tenant?: Tenant | null
 }
 
@@ -31,13 +31,42 @@ const initialFormState: TenantFormState = {
 export function TenantsFormModal({
   open,
   onClose,
-  onSuccess,
   tenant,
 }: TenantsFormModalProps) {
   const [formState, setFormState] = useState<TenantFormState>(initialFormState)
   const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
   const isEditMode = Boolean(tenant)
+  const queryClient = useQueryClient()
+  const tenantMutation = useMutation({
+    mutationFn: async (variables: {
+      mode: 'create' | 'edit'
+      tenantId?: string
+      payload: CreateTenantRequest | EditTenantRequest
+    }) => {
+      if (variables.mode === 'edit' && variables.tenantId) {
+        return editTenant(variables.tenantId, variables.payload as EditTenantRequest)
+      }
+
+      return createTenant(variables.payload as CreateTenantRequest)
+    },
+    onSuccess: async (_, variables) => {
+      if (variables.mode === 'edit') {
+        notifyUpdated('Tenant')
+      } else {
+        notifyCreated('Tenant')
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      onClose()
+    },
+    onError: (err) => {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Failed to save tenant.')
+      }
+    },
+  })
 
   useEffect(() => {
     if (open) {
@@ -51,16 +80,16 @@ export function TenantsFormModal({
           : initialFormState,
       )
       setError('')
-      setSubmitting(false)
+      tenantMutation.reset()
     }
-  }, [open, tenant])
+  }, [open, tenant, tenantMutation])
 
   if (!open) {
     return null
   }
 
   function handleClose() {
-    if (submitting) {
+    if (tenantMutation.isPending) {
       return
     }
 
@@ -84,7 +113,6 @@ export function TenantsFormModal({
     }
 
     try {
-      setSubmitting(true)
       setError('')
 
       if (isEditMode && tenant) {
@@ -92,28 +120,24 @@ export function TenantsFormModal({
           name: trimmedName,
           status: formState.status,
         }
-        await editTenant(tenant.id, payload)
-        notifyUpdated('Tenant')
+        await tenantMutation.mutateAsync({
+          mode: 'edit',
+          payload,
+          tenantId: tenant.id,
+        })
       } else {
         const payload: CreateTenantRequest = {
           slug: trimmedSlug,
           name: trimmedName,
           status: formState.status,
         }
-        await createTenant(payload)
-        notifyCreated('Tenant')
+        await tenantMutation.mutateAsync({
+          mode: 'create',
+          payload,
+        })
       }
+    } catch {
 
-      onSuccess()
-      onClose()
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Failed to create tenant.')
-      }
-    } finally {
-      setSubmitting(false)
     }
   }
 
@@ -193,16 +217,17 @@ export function TenantsFormModal({
             <button
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handleClose}
+              disabled={tenantMutation.isPending}
               type="button"
             >
               Cancel
             </button>
             <button
               className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={submitting}
+              disabled={tenantMutation.isPending}
               type="submit"
             >
-              {submitting
+              {tenantMutation.isPending
                 ? isEditMode
                   ? 'Saving...'
                   : 'Creating...'

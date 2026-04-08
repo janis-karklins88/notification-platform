@@ -6,6 +6,7 @@ const navItems = [
   { to: '/endpoints', label: 'Endpoints' },
   { to: '/subscriptions', label: 'Subscriptions' },
   { to: '/deliveries', label: 'Deliveries' },
+  { to: '/apikeys', label: 'API Keys' },
 ] as const
 
 function getNavLinkClassName({ isActive }: { isActive: boolean }) {
