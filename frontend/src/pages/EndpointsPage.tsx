@@ -145,6 +145,10 @@ export function EndpointsPage() {
   }
 
   function handleDelete(endpointId: string) {
+    if (!window.confirm('Delete this endpoint?')) {
+      return
+    }
+
     endpointActionMutation.mutate({ action: 'delete', endpointId })
   }
 

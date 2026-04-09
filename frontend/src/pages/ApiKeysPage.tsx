@@ -73,6 +73,14 @@ export function ApiKeysPage() {
     }))
   }
 
+  function handleRevoke(apiKeyId: string) {
+    if (!window.confirm('Revoke this API key?')) {
+      return
+    }
+
+    revokeMutation.mutate(apiKeyId)
+  }
+
   return (
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
@@ -128,7 +136,7 @@ export function ApiKeysPage() {
         hasPrevious={data?.hasPrevious ?? false}
         loading={isPending}
         onPageChange={handlePageChange}
-        onRevoke={(apiKeyId) => revokeMutation.mutate(apiKeyId)}
+        onRevoke={handleRevoke}
         page={data?.page ?? filters.page ?? 0}
         totalElements={data?.totalElements ?? 0}
         totalPages={data?.totalPages ?? 0}

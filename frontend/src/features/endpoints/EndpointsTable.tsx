@@ -74,7 +74,7 @@ export function EndpointsTable({
                 Created
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Actions
+                
               </th>
             </tr>
           </thead>
@@ -90,46 +90,50 @@ export function EndpointsTable({
                   {formatDate(endpoint.createdAt)}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-                      onClick={() => onViewDetails(endpoint)}
-                      type="button"
-                    >
-                      Details
-                    </button>
-                    <button
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-                      onClick={() => onEdit(endpoint)}
-                      type="button"
-                    >
-                      Edit
-                    </button>
-                    {endpoint.status === 'ACTIVE' ? (
+                  {endpoint.status === 'DISABLED' ? (
+                    <p className="text-right text-sm text-slate-500">No actions available</p>
+                  ) : (
+                    <div className="flex justify-end gap-2">
                       <button
-                        className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:border-amber-400 hover:bg-amber-50"
-                        onClick={() => onDeactivate(endpoint.id)}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                        onClick={() => onViewDetails(endpoint)}
                         type="button"
                       >
-                        Deactivate
+                        Details
                       </button>
-                    ) : (
                       <button
-                        className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-50"
-                        onClick={() => onReactivate(endpoint.id)}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                        onClick={() => onEdit(endpoint)}
                         type="button"
                       >
-                        Reactivate
+                        Edit
                       </button>
-                    )}
-                    <button
-                      className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-50"
-                      onClick={() => onDelete(endpoint.id)}
-                      type="button"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                      {endpoint.status === 'ACTIVE' ? (
+                        <button
+                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                          onClick={() => onDeactivate(endpoint.id)}
+                          type="button"
+                        >
+                          Deactivate
+                        </button>
+                      ) : (
+                        <button
+                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                          onClick={() => onReactivate(endpoint.id)}
+                          type="button"
+                        >
+                          Reactivate
+                        </button>
+                      )}
+                      <button
+                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-50"
+                        onClick={() => onDelete(endpoint.id)}
+                        type="button"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

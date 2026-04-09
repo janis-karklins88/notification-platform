@@ -125,6 +125,17 @@ export function SubscriptionsPage() {
     }))
   }
 
+  function handleDelete(subscriptionId: string) {
+    if (!window.confirm('Delete this subscription?')) {
+      return
+    }
+
+    subscriptionActionMutation.mutate({
+      action: 'delete',
+      subscriptionId,
+    })
+  }
+
   return (
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
@@ -191,10 +202,7 @@ export function SubscriptionsPage() {
           })
         }
         onDelete={(subscriptionId) =>
-          subscriptionActionMutation.mutate({
-            action: 'delete',
-            subscriptionId,
-          })
+          handleDelete(subscriptionId)
         }
         onPageChange={handlePageChange}
         onReactivate={(subscriptionId) =>

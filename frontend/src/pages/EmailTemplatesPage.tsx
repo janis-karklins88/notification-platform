@@ -66,6 +66,14 @@ export function EmailTemplatesPage() {
     refetch()
   }
 
+  function handleDelete(templateId: string) {
+    if (!window.confirm('Delete this email template?')) {
+      return
+    }
+
+    deleteTemplateMutation.mutate(templateId)
+  }
+
   return (
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
@@ -112,7 +120,7 @@ export function EmailTemplatesPage() {
 
       <EmailTemplatesTable
         loading={isPending}
-        onDelete={(templateId) => deleteTemplateMutation.mutate(templateId)}
+        onDelete={handleDelete}
         onEdit={handleEdit}
         templates={templates ?? []}
       />

@@ -67,7 +67,7 @@ export const Sidebar = () => {
               <p className="mt-2 truncate text-sm font-semibold text-slate-900">
                 {tenant?.name ?? 'Tenant'}
               </p>
-              <p className="truncate text-xs text-slate-500">{tenantId}</p>
+              
             </div>
             <nav className="flex flex-col gap-1">
               {tenantNavItems.map((item) => (

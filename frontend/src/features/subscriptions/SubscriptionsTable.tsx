@@ -72,7 +72,7 @@ export function SubscriptionsTable({
                 Created
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Actions
+                
               </th>
             </tr>
           </thead>
@@ -95,7 +95,7 @@ export function SubscriptionsTable({
                   <div className="flex justify-end gap-2">
                     {subscription.status === 'ACTIVE' ? (
                       <button
-                        className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:border-amber-400 hover:bg-amber-50"
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
                         onClick={() => onDeactivate(subscription.id)}
                         type="button"
                       >
@@ -103,7 +103,7 @@ export function SubscriptionsTable({
                       </button>
                     ) : subscription.status === 'PAUSED' ? (
                       <button
-                        className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-50"
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
                         onClick={() => onReactivate(subscription.id)}
                         type="button"
                       >
