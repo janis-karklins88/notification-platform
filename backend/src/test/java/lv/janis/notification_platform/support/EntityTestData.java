@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lv.janis.notification_platform.auth.domain.ApiKey;
 import lv.janis.notification_platform.delivery.domain.Delivery;
 import lv.janis.notification_platform.delivery.domain.DeliveryStatus;
+import lv.janis.notification_platform.delivery.domain.EmailTemplate;
 import lv.janis.notification_platform.delivery.domain.Endpoint;
 import lv.janis.notification_platform.delivery.domain.EndpointStatus;
 import lv.janis.notification_platform.delivery.domain.EndpointType;
@@ -49,6 +50,22 @@ public final class EntityTestData {
     ReflectionTestUtils.setField(endpoint, "tenantId", tenant.getId());
     ReflectionTestUtils.setField(endpoint, "status", status);
     return endpoint;
+  }
+
+  public static EmailTemplate emailTemplate(
+      UUID id,
+      Tenant tenant,
+      String name,
+      String subject,
+      String body,
+      boolean html,
+      String description,
+      boolean active) {
+    EmailTemplate template = new EmailTemplate(tenant, name, subject, body, html, description);
+    ReflectionTestUtils.setField(template, "id", id);
+    ReflectionTestUtils.setField(template, "tenantId", tenant.getId());
+    ReflectionTestUtils.setField(template, "isActive", active);
+    return template;
   }
 
   public static Event event(UUID id, Tenant tenant, String eventType) {

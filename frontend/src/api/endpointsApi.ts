@@ -52,9 +52,9 @@ export async function updateEndpoint(
   })
 }
 
-export async function listEmailTemplates(): Promise<EmailTemplate[]> {
+export async function listEmailTemplates(tenantId: string): Promise<EmailTemplate[]> {
   return apiFetch({
-    path: '/admin/email-templates',
+    path: `/admin/tenants/${tenantId}/email-templates`,
     method: 'GET',
   })
 }

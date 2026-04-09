@@ -5,10 +5,15 @@ export type EndpointStatus = 'ACTIVE' | 'INACTIVE' | 'DISABLED'
 export type EndpointConfig = Record<string, unknown>
 
 export type EmailTemplate = {
+  id: string
+  tenantId: string
   name: string
-  displayName: string
+  subject: string
+  body: string
+  html: boolean
   description: string
-  bodyType: 'text' | 'html' | string
+  active: boolean
+  createdAt: string
 }
 
 export type EmailEndpointConfig = {

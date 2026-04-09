@@ -1,18 +1,31 @@
 package lv.janis.notification_platform.adminapi.adapter.in.web.dto;
 
-import lv.janis.notification_platform.adminapi.application.service.EmailTemplateDefinition;
+import java.time.Instant;
+import java.util.UUID;
+
+import lv.janis.notification_platform.delivery.domain.EmailTemplate;
 
 public record EmailTemplateResponse(
+    UUID id,
+    UUID tenantId,
     String name,
-    String displayName,
+    String subject,
+    String body,
+    boolean html,
     String description,
-    String bodyType) {
+    boolean active,
+    Instant createdAt) {
 
-  public static EmailTemplateResponse from(EmailTemplateDefinition definition) {
+  public static EmailTemplateResponse from(EmailTemplate template) {
     return new EmailTemplateResponse(
-        definition.name(),
-        definition.displayName(),
-        definition.description(),
-        definition.bodyType());
+        template.getId(),
+        template.getTenantId(),
+        template.getName(),
+        template.getSubject(),
+        template.getBody(),
+        template.isHtml(),
+        template.getDescription(),
+        template.isActive(),
+        template.getCreatedAt());
   }
 }

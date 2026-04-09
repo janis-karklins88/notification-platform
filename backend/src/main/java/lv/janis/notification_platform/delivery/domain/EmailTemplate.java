@@ -143,6 +143,18 @@ public class EmailTemplate {
     isActive = active;
   }
 
+  public void edit(String name, String subject, String body, boolean html, String description) {
+    this.name = normalizeRequired(name, "name");
+    this.subject = normalizeRequired(subject, "subject");
+    this.body = normalizeRequired(body, "body");
+    this.isHtml = html;
+    this.description = normalizeOptional(description);
+  }
+
+  public void delete() {
+    this.isActive = false;
+  }
+
   private static String normalizeRequired(String value, String fieldName) {
     String normalized = Objects.requireNonNull(value, fieldName + " must not be null").trim();
     if (normalized.isEmpty()) {

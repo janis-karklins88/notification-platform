@@ -294,9 +294,9 @@ export function EndpointsFormModal({
   const isEditMode = Boolean(endpoint)
   const queryClient = useQueryClient()
   const { data: emailTemplates, isPending: isEmailTemplatesLoading } = useQuery({
-    queryKey: ['emailTemplates'],
-    queryFn: listEmailTemplates,
-    enabled: open,
+    queryKey: ['emailTemplates', formState.tenantId],
+    queryFn: () => listEmailTemplates(formState.tenantId),
+    enabled: open && Boolean(formState.tenantId),
   })
   const endpointMutation = useMutation({
     mutationFn: async (variables: {
@@ -558,7 +558,7 @@ export function EndpointsFormModal({
                     <option value="">Use inline body template</option>
                     {emailTemplates?.map((template) => (
                       <option key={template.name} value={template.name}>
-                        {template.displayName}
+                        {template.name}
                       </option>
                     ))}
                   </select>
@@ -589,10 +589,10 @@ export function EndpointsFormModal({
 
               {selectedTemplate ? (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <p className="font-medium text-slate-900">{selectedTemplate.displayName}</p>
+                  <p className="font-medium text-slate-900">{selectedTemplate.name}</p>
                   <p className="mt-1">{selectedTemplate.description}</p>
                   <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
-                    Default body type: {selectedTemplate.bodyType}
+                    Default body type: {selectedTemplate.html ? 'html' : 'text'}
                   </p>
                 </div>
               ) : null}
