@@ -10,22 +10,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lv.janis.notification_platform.adminapi.adapter.in.web.dto.EmailTemplateResponse;
-import lv.janis.notification_platform.adminapi.application.service.EmailTemplateCatalogService;
+import lv.janis.notification_platform.adminapi.application.port.in.EmailTemplateUseCase;
 
 @RestController
 @Validated
 @RequestMapping("/admin")
 public class EmailTemplateAdminController {
-  private final EmailTemplateCatalogService emailTemplateCatalogService;
+  private final EmailTemplateUseCase emailTemplateUseCase;
 
-  public EmailTemplateAdminController(EmailTemplateCatalogService emailTemplateCatalogService) {
-    this.emailTemplateCatalogService = emailTemplateCatalogService;
+  public EmailTemplateAdminController(EmailTemplateUseCase emailTemplateUseCase) {
+    this.emailTemplateUseCase = emailTemplateUseCase;
   }
 
   @GetMapping("/email-templates")
   @PreAuthorize("hasRole('PLATFORM_ADMIN')")
   public ResponseEntity<List<EmailTemplateResponse>> listEmailTemplates() {
-    var response = emailTemplateCatalogService.listTemplates().stream()
+    var response = emailTemplateUseCase.listTemplates().stream()
         .map(EmailTemplateResponse::from)
         .toList();
     return ResponseEntity.ok(response);
