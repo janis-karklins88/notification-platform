@@ -17,7 +17,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lv.janis.notification_platform.delivery.application.exception.DeliveryNonRetryableException;
 import lv.janis.notification_platform.delivery.application.model.PreparedEmailMessage;
+import lv.janis.notification_platform.delivery.application.port.out.EmailTemplateRepositoryPort;
 import lv.janis.notification_platform.delivery.domain.Delivery;
+import lv.janis.notification_platform.delivery.domain.EmailTemplate;
 
 @Component
 public class EmailMessageFactory {
@@ -47,13 +49,19 @@ public class EmailMessageFactory {
 
   private final Clock clock;
   private final ObjectMapper objectMapper;
+  private final EmailTemplateRepositoryPort emailTemplateRepository;
   private final EmailTemplateRenderer templateRenderer;
   private final String defaultFrom;
 
-  public EmailMessageFactory(Clock clock, ObjectMapper objectMapper, EmailTemplateRenderer templateRenderer,
+  public EmailMessageFactory(
+      Clock clock,
+      ObjectMapper objectMapper,
+      EmailTemplateRepositoryPort emailTemplateRepository,
+      EmailTemplateRenderer templateRenderer,
       @Value("${notification.email.from:}") String defaultFrom) {
     this.clock = Objects.requireNonNull(clock, "clock must not be null");
     this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper must not be null");
+    this.emailTemplateRepository = Objects.requireNonNull(emailTemplateRepository, "emailTemplateRepository must not be null");
     this.templateRenderer = Objects.requireNonNull(templateRenderer, "templateRenderer must not be null");
     this.defaultFrom = defaultFrom == null ? "" : defaultFrom.strip();
   }
@@ -67,19 +75,25 @@ public class EmailMessageFactory {
 
     Map<String, Object> context = buildTemplateContext(delivery);
     String templateName = readText(config, TEMPLATE_NAME_KEY).orElse("");
-    boolean html = isHtml(config, !templateName.isBlank());
-    String subjectTemplate = readText(config, SUBJECT_TEMPLATE_KEY).orElse(DEFAULT_SUBJECT_TEMPLATE);
     String body;
     String subject;
-    String bodyTemplate = readText(config, BODY_TEMPLATE_KEY).orElse(DEFAULT_BODY_TEMPLATE);
+    boolean html;
 
     try {
       if (templateName.isBlank()) {
+        String subjectTemplate = readText(config, SUBJECT_TEMPLATE_KEY).orElse(DEFAULT_SUBJECT_TEMPLATE);
+        String bodyTemplate = readText(config, BODY_TEMPLATE_KEY).orElse(DEFAULT_BODY_TEMPLATE);
+        html = isHtml(config, false);
+        subject = templateRenderer.renderInlineTemplate(subjectTemplate, context);
         body = templateRenderer.renderInlineTemplate(bodyTemplate, context);
       } else {
-        body = templateRenderer.renderTemplateByName(templateName, context);
+        EmailTemplate template = resolveDatabaseTemplate(delivery, templateName);
+        html = isHtml(config, template.isHtml());
+        subject = templateRenderer.renderInlineTemplate(template.getSubject(), context);
+        body = templateRenderer.renderInlineTemplate(template.getBody(), context);
       }
-      subject = templateRenderer.renderInlineTemplate(subjectTemplate, context);
+    } catch (DeliveryNonRetryableException ex) {
+      throw ex;
     } catch (RuntimeException ex) {
       throw new DeliveryNonRetryableException("Failed to render email message template", ex);
     }
@@ -93,9 +107,16 @@ public class EmailMessageFactory {
         html);
   }
 
-  private boolean isHtml(JsonNode config, boolean useTemplateDefault) {
+  private EmailTemplate resolveDatabaseTemplate(Delivery delivery, String templateName) {
+    return emailTemplateRepository.findByTenantIdAndName(delivery.getTenantId(), templateName)
+        .filter(EmailTemplate::isActive)
+        .orElseThrow(() -> new DeliveryNonRetryableException(
+            "EMAIL template '" + templateName + "' not found for tenant " + delivery.getTenantId()));
+  }
+
+  private boolean isHtml(JsonNode config, boolean defaultHtml) {
     String bodyType = readText(config, BODY_TYPE_KEY)
-        .orElse(useTemplateDefault ? BODY_TYPE_HTML : BODY_TYPE_TEXT)
+        .orElse(defaultHtml ? BODY_TYPE_HTML : BODY_TYPE_TEXT)
         .toLowerCase()
         .strip();
     return BODY_TYPE_HTML.equals(bodyType);

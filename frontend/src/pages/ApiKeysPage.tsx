@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useParams } from 'react-router-dom'
 
-import { listTenants } from '../api/tenantsApi'
+import { getTenantById, listTenants } from '../api/tenantsApi'
 import { listApiKeys, revokeApiKey } from '../api/apiKeysApi'
 import { ApiKeysFilters } from '../features/apiKeys/ApiKeysFilters'
 import { ApiKeysFormModal } from '../features/apiKeys/ApiKeysFormModal'
@@ -10,7 +11,12 @@ import type { ApiKeyFilter } from '../features/apiKeys/types'
 import { notifySuccess } from '../lib/notifications'
 
 export function ApiKeysPage() {
-  const [filters, setFilters] = useState<ApiKeyFilter>({ page: 0, size: 20 })
+  const { tenantId: routeTenantId } = useParams()
+  const [filters, setFilters] = useState<ApiKeyFilter>({
+    page: 0,
+    size: 20,
+    tenantId: routeTenantId,
+  })
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -29,6 +35,12 @@ export function ApiKeysPage() {
     queryFn: () => listTenants({ page: 0, size: 100 }),
   })
 
+  const { data: tenant } = useQuery({
+    queryKey: ['tenant', routeTenantId],
+    queryFn: () => getTenantById(routeTenantId!),
+    enabled: Boolean(routeTenantId),
+  })
+
   const revokeMutation = useMutation({
     mutationFn: revokeApiKey,
     onSuccess: async () => {
@@ -41,12 +53,13 @@ export function ApiKeysPage() {
     setFilters((current) => ({
       ...current,
       ...next,
+      tenantId: routeTenantId ?? next.tenantId ?? current.tenantId,
       page: 0,
     }))
   }
 
   function handleResetFilters() {
-    setFilters({ page: 0, size: 20 })
+    setFilters({ page: 0, size: 20, tenantId: routeTenantId })
   }
 
   function handleRefresh() {
@@ -64,9 +77,13 @@ export function ApiKeysPage() {
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">API keys</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {tenant ? `${tenant.name} API Keys` : 'API keys'}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Create and manage tenant API keys.
+            {routeTenantId
+              ? 'Create and manage API keys for the selected tenant.'
+              : 'Create and manage tenant API keys.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -90,7 +107,12 @@ export function ApiKeysPage() {
       <ApiKeysFilters
         onChange={handleFiltersChange}
         onReset={handleResetFilters}
-        tenantOptions={tenantOptions?.items ?? []}
+        tenantLocked={Boolean(routeTenantId)}
+        tenantOptions={
+          routeTenantId
+            ? (tenantOptions?.items ?? []).filter((tenantOption) => tenantOption.id === routeTenantId)
+            : tenantOptions?.items ?? []
+        }
         value={filters}
       />
 
@@ -115,7 +137,11 @@ export function ApiKeysPage() {
       <ApiKeysFormModal
         onClose={() => setIsFormModalOpen(false)}
         open={isFormModalOpen}
-        tenantOptions={tenantOptions?.items ?? []}
+        tenantOptions={
+          routeTenantId
+            ? (tenantOptions?.items ?? []).filter((tenantOption) => tenantOption.id === routeTenantId)
+            : tenantOptions?.items ?? []
+        }
       />
     </section>
   )

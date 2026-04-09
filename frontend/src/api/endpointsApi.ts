@@ -2,7 +2,6 @@ import { apiFetch } from './client'
 
 import type {
   CreateEndpointRequest,
-  EmailTemplate,
   Endpoint,
   EndpointFilter,
   PageResponse,
@@ -49,13 +48,6 @@ export async function updateEndpoint(
     path: `/admin/endpoints/${endpointId}`,
     method: 'PATCH',
     body: JSON.stringify(request),
-  })
-}
-
-export async function listEmailTemplates(tenantId: string): Promise<EmailTemplate[]> {
-  return apiFetch({
-    path: `/admin/tenants/${tenantId}/email-templates`,
-    method: 'GET',
   })
 }
 

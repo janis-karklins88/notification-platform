@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useParams } from 'react-router-dom'
 
 import { listEndpoints } from '../api/endpointsApi'
 import {
@@ -8,7 +9,7 @@ import {
   listSubscriptions,
   reactivateSubscription,
 } from '../api/subscriptionsApi'
-import { listTenants } from '../api/tenantsApi'
+import { getTenantById, listTenants } from '../api/tenantsApi'
 import { SubscriptionsFilters } from '../features/subscriptions/SubscriptionsFilters'
 import { SubscriptionsFormModal } from '../features/subscriptions/SubscriptionsFormModal'
 import { SubscriptionsTable } from '../features/subscriptions/SubscriptionsTable'
@@ -16,7 +17,12 @@ import type { SubscriptionFilter } from '../features/subscriptions/types'
 import { notifyDeleted, notifySuccess, notifyUpdated } from '../lib/notifications'
 
 export function SubscriptionsPage() {
-  const [filters, setFilters] = useState<SubscriptionFilter>({ page: 0, size: 20 })
+  const { tenantId: routeTenantId } = useParams()
+  const [filters, setFilters] = useState<SubscriptionFilter>({
+    page: 0,
+    size: 20,
+    tenantId: routeTenantId,
+  })
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -34,6 +40,12 @@ export function SubscriptionsPage() {
   const { data: tenantOptions } = useQuery({
     queryKey: ['tenants', 'options'],
     queryFn: () => listTenants({ page: 0, size: 100 }),
+  })
+
+  const { data: tenant } = useQuery({
+    queryKey: ['tenant', routeTenantId],
+    queryFn: () => getTenantById(routeTenantId!),
+    enabled: Boolean(routeTenantId),
   })
 
   const { data: endpointOptions } = useQuery({
@@ -91,12 +103,13 @@ export function SubscriptionsPage() {
     setFilters((current) => ({
       ...current,
       ...next,
+      tenantId: routeTenantId ?? next.tenantId ?? current.tenantId,
       page: 0,
     }))
   }
 
   function handleResetFilters() {
-    setFilters({ page: 0, size: 20 })
+    setFilters({ page: 0, size: 20, tenantId: routeTenantId })
   }
 
   function handleRefresh() {
@@ -116,9 +129,13 @@ export function SubscriptionsPage() {
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Subscriptions</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {tenant ? `${tenant.name} Subscriptions` : 'Subscriptions'}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Manage event routing subscriptions by tenant.
+            {routeTenantId
+              ? 'Manage event routing subscriptions for the selected tenant.'
+              : 'Manage event routing subscriptions by tenant.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -143,7 +160,12 @@ export function SubscriptionsPage() {
         endpointOptions={endpointOptions?.items ?? []}
         onChange={handleFiltersChange}
         onReset={handleResetFilters}
-        tenantOptions={tenantOptions?.items ?? []}
+        tenantLocked={Boolean(routeTenantId)}
+        tenantOptions={
+          routeTenantId
+            ? (tenantOptions?.items ?? []).filter((tenantOption) => tenantOption.id === routeTenantId)
+            : tenantOptions?.items ?? []
+        }
         value={filters}
       />
 
@@ -191,7 +213,11 @@ export function SubscriptionsPage() {
       <SubscriptionsFormModal
         onClose={handleFormClose}
         open={isFormModalOpen}
-        tenantOptions={tenantOptions?.items ?? []}
+        tenantOptions={
+          routeTenantId
+            ? (tenantOptions?.items ?? []).filter((tenantOption) => tenantOption.id === routeTenantId)
+            : tenantOptions?.items ?? []
+        }
       />
     </section>
   )

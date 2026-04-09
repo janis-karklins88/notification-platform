@@ -1,11 +1,11 @@
-import { NavLink } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { NavLink, useParams } from 'react-router-dom'
 
-const navItems = [
+import { getTenantById } from '../../api/tenantsApi'
+
+const globalNavItems = [
   { to: '/', label: 'Dashboard' },
   { to: '/tenants', label: 'Tenants' },
-  { to: '/endpoints', label: 'Endpoints' },
-  { to: '/subscriptions', label: 'Subscriptions' },
-  { to: '/api-keys', label: 'API Keys' },
   { to: '/deliveries', label: 'Deliveries' },
 ] as const
 
@@ -19,6 +19,23 @@ function getNavLinkClassName({ isActive }: { isActive: boolean }) {
 }
 
 export const Sidebar = () => {
+  const { tenantId } = useParams()
+  const { data: tenant } = useQuery({
+    queryKey: ['tenant', tenantId],
+    queryFn: () => getTenantById(tenantId!),
+    enabled: Boolean(tenantId),
+  })
+
+  const tenantNavItems = tenantId
+    ? [
+        { to: `/tenants/${tenantId}`, label: 'Overview', end: true },
+        { to: `/tenants/${tenantId}/endpoints`, label: 'Endpoints' },
+        { to: `/tenants/${tenantId}/subscriptions`, label: 'Subscriptions' },
+        { to: `/tenants/${tenantId}/api-keys`, label: 'API Keys' },
+        { to: `/tenants/${tenantId}/email-templates`, label: 'Email Templates' },
+      ]
+    : []
+
   return (
     <aside className="w-56 border-r border-slate-200 bg-white px-4 py-6">
       <div className="mb-8">
@@ -27,13 +44,41 @@ export const Sidebar = () => {
         </p>
       </div>
 
-      <nav className="flex flex-col gap-1">
-        {navItems.map((item) => (
-          <NavLink key={item.to} className={getNavLinkClassName} to={item.to}>
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+      <div className="space-y-8">
+        <div>
+          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Main
+          </p>
+          <nav className="flex flex-col gap-1">
+            {globalNavItems.map((item) => (
+              <NavLink key={item.to} className={getNavLinkClassName} end={item.to === '/'} to={item.to}>
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        {tenantId ? (
+          <div>
+            <div className="mb-2 px-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Tenant
+              </p>
+              <p className="mt-2 truncate text-sm font-semibold text-slate-900">
+                {tenant?.name ?? 'Tenant'}
+              </p>
+              <p className="truncate text-xs text-slate-500">{tenantId}</p>
+            </div>
+            <nav className="flex flex-col gap-1">
+              {tenantNavItems.map((item) => (
+                <NavLink key={item.to} className={getNavLinkClassName} end={item.end} to={item.to}>
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        ) : null}
+      </div>
     </aside>
   )
 }

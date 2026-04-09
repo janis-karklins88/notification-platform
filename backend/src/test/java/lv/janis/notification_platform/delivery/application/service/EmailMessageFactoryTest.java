@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +15,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lv.janis.notification_platform.delivery.application.exception.DeliveryNonRetryableException;
 import lv.janis.notification_platform.delivery.application.model.PreparedEmailMessage;
+import lv.janis.notification_platform.delivery.application.port.out.EmailTemplateRepositoryPort;
 import lv.janis.notification_platform.delivery.domain.Delivery;
+import lv.janis.notification_platform.delivery.domain.EmailTemplate;
 import lv.janis.notification_platform.delivery.domain.Endpoint;
 import lv.janis.notification_platform.delivery.domain.EndpointType;
 import lv.janis.notification_platform.ingest.domain.Event;
@@ -34,6 +38,7 @@ import lv.janis.notification_platform.routing.domain.Subscription;
 import lv.janis.notification_platform.tenant.domain.Tenant;
 
 import static lv.janis.notification_platform.support.EntityTestData.delivery;
+import static lv.janis.notification_platform.support.EntityTestData.emailTemplate;
 import static lv.janis.notification_platform.support.EntityTestData.endpoint;
 import static lv.janis.notification_platform.support.EntityTestData.event;
 import static lv.janis.notification_platform.support.EntityTestData.subscription;
@@ -43,9 +48,11 @@ class EmailMessageFactoryTest {
   private static final Instant NOW = Instant.parse("2026-02-05T12:00:00Z");
 
   private final EmailTemplateRenderer renderer = mock(EmailTemplateRenderer.class);
+  private final EmailTemplateRepositoryPort emailTemplateRepository = mock(EmailTemplateRepositoryPort.class);
   private final EmailMessageFactory factory = new EmailMessageFactory(
       Clock.fixed(NOW, ZoneOffset.UTC),
       new ObjectMapper(),
+      emailTemplateRepository,
       renderer,
       "default@example.com");
 
@@ -85,24 +92,52 @@ class EmailMessageFactoryTest {
   }
 
   @Test
-  void buildUsesNamedTemplateAndDefaultsHtmlWhenTemplateNamePresent() {
+  void buildUsesDatabaseTemplateWhenTemplateNamePresent() {
     ObjectNode config = emailConfig();
     config.putArray("recipients").add("to@example.com");
     config.put("templateName", "welcome");
-    config.put("subjectTemplate", "Hello {{eventType}}");
     config.put("from", "sender@example.com");
     config.put("replyTo", "reply@example.com");
     Delivery delivery = deliveryWithConfig(config);
-    when(renderer.renderTemplateByName(eq("welcome"), anyMap())).thenReturn("<p>Hello</p>");
+    EmailTemplate template = emailTemplate(
+        UUID.randomUUID(),
+        delivery.getTenant(),
+        "welcome",
+        "Hello {{eventType}}",
+        "<p>Hello {{payload.orderId}}</p>",
+        true,
+        "welcome template",
+        true);
+    when(emailTemplateRepository.findByTenantIdAndName(delivery.getTenantId(), "welcome"))
+        .thenReturn(Optional.of(template));
     when(renderer.renderInlineTemplate(eq("Hello {{eventType}}"), anyMap())).thenReturn("Hello order.created");
+    when(renderer.renderInlineTemplate(eq("<p>Hello {{payload.orderId}}</p>"), anyMap()))
+        .thenReturn("<p>Hello 123</p>");
 
     PreparedEmailMessage message = factory.build(delivery);
 
     assertEquals("sender@example.com", message.from());
     assertEquals("reply@example.com", message.replyTo());
     assertEquals("Hello order.created", message.subject());
-    assertEquals("<p>Hello</p>", message.body());
+    assertEquals("<p>Hello 123</p>", message.body());
     assertTrue(message.html());
+    verify(renderer, never()).renderTemplateByName(eq("welcome"), anyMap());
+  }
+
+  @Test
+  void buildRejectsMissingDatabaseTemplateWhenTemplateNamePresent() {
+    ObjectNode config = emailConfig();
+    config.putArray("recipients").add("to@example.com");
+    config.put("templateName", "welcome");
+    Delivery delivery = deliveryWithConfig(config);
+    when(emailTemplateRepository.findByTenantIdAndName(delivery.getTenantId(), "welcome"))
+        .thenReturn(Optional.empty());
+
+    DeliveryNonRetryableException ex = assertThrows(DeliveryNonRetryableException.class, () -> factory.build(delivery));
+
+    assertEquals(
+        "EMAIL template 'welcome' not found for tenant " + delivery.getTenantId(),
+        ex.getMessage());
   }
 
   @Test

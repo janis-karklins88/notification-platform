@@ -8,6 +8,7 @@ type ApiKeysFiltersProps = {
   onChange: (next: Partial<ApiKeyFilter>) => void
   onReset: () => void
   tenantOptions: Tenant[]
+  tenantLocked?: boolean
 }
 
 type FilterFormState = {
@@ -33,6 +34,7 @@ export function ApiKeysFilters({
   onChange,
   onReset,
   tenantOptions,
+  tenantLocked = false,
 }: ApiKeysFiltersProps) {
   const [formState, setFormState] = useState<FilterFormState>({
     prefix: value.prefix ?? '',
@@ -92,11 +94,12 @@ export function ApiKeysFilters({
           <span className="text-sm font-medium text-slate-700">Tenant</span>
           <select
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+            disabled={tenantLocked}
             name="tenantId"
             onChange={handleFieldChange}
             value={value.tenantId ?? ''}
           >
-            <option value="">All tenants</option>
+            <option value="">{tenantLocked ? 'Tenant locked' : 'All tenants'}</option>
             {tenantOptions.map((tenant) => (
               <option key={tenant.id} value={tenant.id}>
                 {tenant.name}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useParams } from 'react-router-dom'
 
 import {
   deactivateEndpoint,
@@ -7,7 +8,7 @@ import {
   listEndpoints,
   reactivateEndpoint,
 } from '../api/endpointsApi'
-import { listTenants } from '../api/tenantsApi'
+import { getTenantById, listTenants } from '../api/tenantsApi'
 import { EndpointDetailsModal } from '../features/endpoints/EndpointDetailsModal'
 import { EndpointsFilters } from '../features/endpoints/EndpointsFilters'
 import { EndpointsFormModal } from '../features/endpoints/EndpointsFormModal'
@@ -16,7 +17,12 @@ import type { Endpoint, EndpointFilter } from '../features/endpoints/types'
 import { notifyDeleted, notifySuccess, notifyUpdated } from '../lib/notifications'
 
 export function EndpointsPage() {
-  const [filters, setFilters] = useState<EndpointFilter>({ page: 0, size: 20 })
+  const { tenantId: routeTenantId } = useParams()
+  const [filters, setFilters] = useState<EndpointFilter>({
+    page: 0,
+    size: 20,
+    tenantId: routeTenantId,
+  })
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null)
   const [detailsEndpoint, setDetailsEndpoint] = useState<Endpoint | null>(null)
@@ -35,6 +41,12 @@ export function EndpointsPage() {
   const { data: tenantOptions } = useQuery({
     queryKey: ['tenants', 'options'],
     queryFn: () => listTenants({ page: 0, size: 100 }),
+  })
+
+  const { data: tenant } = useQuery({
+    queryKey: ['tenant', routeTenantId],
+    queryFn: () => getTenantById(routeTenantId!),
+    enabled: Boolean(routeTenantId),
   })
 
   const tenantNamesById = Object.fromEntries(
@@ -100,12 +112,17 @@ export function EndpointsPage() {
     setFilters((current) => ({
       ...current,
       ...next,
+      tenantId: routeTenantId ?? next.tenantId ?? current.tenantId,
       page: 0,
     }))
   }
 
   function handleResetFilters() {
-    setFilters({ page: 0, size: 20 })
+    setFilters({
+      page: 0,
+      size: 20,
+      tenantId: routeTenantId,
+    })
   }
 
   function handleRefresh() {
@@ -135,9 +152,13 @@ export function EndpointsPage() {
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Endpoints</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {tenant ? `${tenant.name} Endpoints` : 'Endpoints'}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Manage delivery endpoints and their lifecycle.
+            {routeTenantId
+              ? 'Manage delivery endpoints for the selected tenant.'
+              : 'Manage delivery endpoints and their lifecycle.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -161,7 +182,12 @@ export function EndpointsPage() {
       <EndpointsFilters
         onChange={handleFiltersChange}
         onReset={handleResetFilters}
-        tenantOptions={tenantOptions?.items ?? []}
+        tenantLocked={Boolean(routeTenantId)}
+        tenantOptions={
+          routeTenantId
+            ? (tenantOptions?.items ?? []).filter((tenantOption) => tenantOption.id === routeTenantId)
+            : tenantOptions?.items ?? []
+        }
         value={filters}
       />
 
@@ -192,7 +218,11 @@ export function EndpointsPage() {
         endpoint={selectedEndpoint}
         onClose={handleFormClose}
         open={isFormModalOpen}
-        tenantOptions={tenantOptions?.items ?? []}
+        tenantOptions={
+          routeTenantId
+            ? (tenantOptions?.items ?? []).filter((tenantOption) => tenantOption.id === routeTenantId)
+            : tenantOptions?.items ?? []
+        }
       />
 
       <EndpointDetailsModal

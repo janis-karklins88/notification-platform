@@ -3,15 +3,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   createEndpoint,
-  listEmailTemplates,
   updateEndpoint,
 } from '../../api/endpointsApi'
+import { listEmailTemplates } from '../../api/emailTemplatesApi'
 import { notifyCreated, notifyUpdated } from '../../lib/notifications'
+import type { EmailTemplate } from '../emailTemplates/types'
 import type { Tenant } from '../tenants/types'
 import type {
   CreateEndpointRequest,
   EmailEndpointConfig,
-  EmailTemplate,
   Endpoint,
   EndpointConfig,
   EndpointType,
@@ -428,7 +428,7 @@ export function EndpointsFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
+      <div className="flex max-h-[calc(100vh-3rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="border-b border-slate-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-slate-900">
             {isEditMode ? 'Edit endpoint' : 'Create endpoint'}
@@ -440,323 +440,331 @@ export function EndpointsFormModal({
           </p>
         </div>
 
-        <form className="space-y-5 px-6 py-5" onSubmit={handleSubmit}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-700">Tenant</span>
-              <select
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
-                disabled={isEditMode}
-                onChange={(event) =>
-                  setFormState((current) => ({
-                    ...current,
-                    tenantId: event.target.value,
-                  }))
-                }
-                value={formState.tenantId}
-              >
-                <option value="">Select tenant</option>
-                {tenantOptions.map((tenantOption) => (
-                  <option key={tenantOption.id} value={tenantOption.id}>
-                    {tenantOption.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-slate-700">Tenant</span>
+                <select
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
+                  disabled={isEditMode}
+                  onChange={(event) =>
+                    setFormState((current) => ({
+                      ...current,
+                      tenantId: event.target.value,
+                    }))
+                  }
+                  value={formState.tenantId}
+                >
+                  <option value="">Select tenant</option>
+                  {tenantOptions.map((tenantOption) => (
+                    <option key={tenantOption.id} value={tenantOption.id}>
+                      {tenantOption.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-700">Type</span>
-              <select
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
-                disabled={isEditMode}
-                onChange={(event) =>
-                  setFormState((current) => ({
-                    ...current,
-                    type: event.target.value as EndpointType,
-                  }))
-                }
-                value={formState.type}
-              >
-                {typeOptions.map((typeOption) => (
-                  <option key={typeOption} value={typeOption}>
-                    {getEndpointTypeLabel(typeOption)}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-slate-700">Type</span>
+                <select
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
+                  disabled={isEditMode}
+                  onChange={(event) =>
+                    setFormState((current) => ({
+                      ...current,
+                      type: event.target.value as EndpointType,
+                    }))
+                  }
+                  value={formState.type}
+                >
+                  {typeOptions.map((typeOption) => (
+                    <option key={typeOption} value={typeOption}>
+                      {getEndpointTypeLabel(typeOption)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {formState.type === 'EMAIL' ? (
+              <div className="space-y-5">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-700">Recipients</span>
+                    <textarea
+                      className="min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      onChange={(event) =>
+                        setFormState((current) => ({
+                          ...current,
+                          emailRecipientsText: event.target.value,
+                        }))
+                      }
+                      placeholder={'ops@example.com\nsupport@example.com'}
+                      value={formState.emailRecipientsText}
+                    />
+                    <p className="text-xs text-slate-500">
+                      Enter one email per line or separate with commas.
+                    </p>
+                  </label>
+
+                  <div className="grid gap-4">
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">From</span>
+                      <input
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                        onChange={(event) =>
+                          setFormState((current) => ({
+                            ...current,
+                            emailFrom: event.target.value,
+                          }))
+                        }
+                        placeholder="noreply@example.com"
+                        type="email"
+                        value={formState.emailFrom}
+                      />
+                    </label>
+
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">Reply-to</span>
+                      <input
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                        onChange={(event) =>
+                          setFormState((current) => ({
+                            ...current,
+                            emailReplyTo: event.target.value,
+                          }))
+                        }
+                        placeholder="support@example.com"
+                        type="email"
+                        value={formState.emailReplyTo}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-700">Template</span>
+                    <select
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      onChange={(event) =>
+                        setFormState((current) => ({
+                          ...current,
+                          emailTemplateName: event.target.value,
+                        }))
+                      }
+                      value={formState.emailTemplateName}
+                    >
+                      <option value="">Use inline body template</option>
+                      {emailTemplates?.map((template) => (
+                        <option key={template.name} value={template.name}>
+                          {template.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-500">
+                      {isEmailTemplatesLoading
+                        ? 'Loading available backend templates...'
+                        : 'Select a backend-owned template or keep the body inline.'}
+                    </p>
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-700">Body type</span>
+                    <select
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      onChange={(event) =>
+                        setFormState((current) => ({
+                          ...current,
+                          emailBodyType: event.target.value as 'text' | 'html',
+                        }))
+                      }
+                      value={formState.emailBodyType}
+                    >
+                      <option value="html">HTML</option>
+                      <option value="text">Text</option>
+                    </select>
+                  </label>
+                </div>
+
+                {selectedTemplate ? (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                    <p className="font-medium text-slate-900">{selectedTemplate.name}</p>
+                    <p className="mt-1">{selectedTemplate.description}</p>
+                    <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
+                      Default body type: {selectedTemplate.html ? 'html' : 'text'}
+                    </p>
+                  </div>
+                ) : null}
+
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-700">Subject template</span>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
+                    disabled={Boolean(formState.emailTemplateName)}
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
+                        emailSubjectTemplate: event.target.value,
+                      }))
+                    }
+                    placeholder="Order {{payload.orderId}} created"
+                    type="text"
+                    value={formState.emailSubjectTemplate}
+                  />
+                  <p className="text-xs text-slate-500">
+                    {formState.emailTemplateName
+                      ? 'Subject is managed by the selected backend template.'
+                      : 'Inline subject uses {{payload.*}} placeholders and is stored in endpoint config.'}
+                  </p>
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-700">Body template</span>
+                  <textarea
+                    className="min-h-56 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
+                    disabled={Boolean(formState.emailTemplateName)}
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
+                        emailBodyTemplate: event.target.value,
+                      }))
+                    }
+                    placeholder={'Hello {{payload.customer.name}},\n\nYour order {{payload.orderId}} was created.'}
+                    value={formState.emailBodyTemplate}
+                  />
+                  <p className="text-xs text-slate-500">
+                    {formState.emailTemplateName
+                      ? 'Body template is managed by the selected backend template.'
+                      : 'Inline body uses {{payload.*}} placeholders and is stored in endpoint config.'}
+                  </p>
+                </label>
+              </div>
+            ) : null}
+
+            {formState.type === 'WEBHOOK' ? (
+              <div className="space-y-5">
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-700">Webhook URL</span>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
+                        webhookUrl: event.target.value,
+                      }))
+                    }
+                    placeholder="https://example.com/webhooks/notifications"
+                    type="url"
+                    value={formState.webhookUrl}
+                  />
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-700">Headers JSON</span>
+                  <textarea
+                    className="min-h-36 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
+                        webhookHeadersText: event.target.value,
+                      }))
+                    }
+                    placeholder={'{\n  "X-Api-Key": "secret"\n}'}
+                    value={formState.webhookHeadersText}
+                  />
+                </label>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-700">
+                      Connect timeout (ms)
+                    </span>
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      onChange={(event) =>
+                        setFormState((current) => ({
+                          ...current,
+                          webhookConnectTimeoutMs: event.target.value,
+                        }))
+                      }
+                      placeholder="2000"
+                      type="number"
+                      value={formState.webhookConnectTimeoutMs}
+                    />
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-700">
+                      Response timeout (ms)
+                    </span>
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      onChange={(event) =>
+                        setFormState((current) => ({
+                          ...current,
+                          webhookResponseTimeoutMs: event.target.value,
+                        }))
+                      }
+                      placeholder="5000"
+                      type="number"
+                      value={formState.webhookResponseTimeoutMs}
+                    />
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-700">
+                      Request timeout (ms)
+                    </span>
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                      onChange={(event) =>
+                        setFormState((current) => ({
+                          ...current,
+                          webhookConnectionRequestTimeoutMs: event.target.value,
+                        }))
+                      }
+                      placeholder="1000"
+                      type="number"
+                      value={formState.webhookConnectionRequestTimeoutMs}
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : null}
+
+            {!isStructuredEndpointType(formState.type) ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  Structured configuration is currently available only for EMAIL and
+                  WEBHOOK endpoints. This endpoint type falls back to raw JSON.
+                </div>
+
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-700">Config JSON</span>
+                  <textarea
+                    className="min-h-56 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
+                        fallbackConfigText: event.target.value,
+                      }))
+                    }
+                    value={formState.fallbackConfigText}
+                  />
+                </label>
+              </div>
+            ) : null}
+
+            {error ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
           </div>
 
-          {formState.type === 'EMAIL' ? (
-            <div className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">Recipients</span>
-                  <textarea
-                    className="min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                    onChange={(event) =>
-                      setFormState((current) => ({
-                        ...current,
-                        emailRecipientsText: event.target.value,
-                      }))
-                    }
-                    placeholder={'ops@example.com\nsupport@example.com'}
-                    value={formState.emailRecipientsText}
-                  />
-                  <p className="text-xs text-slate-500">
-                    Enter one email per line or separate with commas.
-                  </p>
-                </label>
-
-                <div className="grid gap-4">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">From</span>
-                    <input
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                      onChange={(event) =>
-                        setFormState((current) => ({
-                          ...current,
-                          emailFrom: event.target.value,
-                        }))
-                      }
-                      placeholder="noreply@example.com"
-                      type="email"
-                      value={formState.emailFrom}
-                    />
-                  </label>
-
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">Reply-to</span>
-                    <input
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                      onChange={(event) =>
-                        setFormState((current) => ({
-                          ...current,
-                          emailReplyTo: event.target.value,
-                        }))
-                      }
-                      placeholder="support@example.com"
-                      type="email"
-                      value={formState.emailReplyTo}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">Template</span>
-                  <select
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                    onChange={(event) =>
-                      setFormState((current) => ({
-                        ...current,
-                        emailTemplateName: event.target.value,
-                      }))
-                    }
-                    value={formState.emailTemplateName}
-                  >
-                    <option value="">Use inline body template</option>
-                    {emailTemplates?.map((template) => (
-                      <option key={template.name} value={template.name}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-slate-500">
-                    {isEmailTemplatesLoading
-                      ? 'Loading available backend templates...'
-                      : 'Select a backend-owned template or keep the body inline.'}
-                  </p>
-                </label>
-
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">Body type</span>
-                  <select
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                    onChange={(event) =>
-                      setFormState((current) => ({
-                        ...current,
-                        emailBodyType: event.target.value as 'text' | 'html',
-                      }))
-                    }
-                    value={formState.emailBodyType}
-                  >
-                    <option value="html">HTML</option>
-                    <option value="text">Text</option>
-                  </select>
-                </label>
-              </div>
-
-              {selectedTemplate ? (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <p className="font-medium text-slate-900">{selectedTemplate.name}</p>
-                  <p className="mt-1">{selectedTemplate.description}</p>
-                  <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
-                    Default body type: {selectedTemplate.html ? 'html' : 'text'}
-                  </p>
-                </div>
-              ) : null}
-
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-700">Subject template</span>
-                <input
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      emailSubjectTemplate: event.target.value,
-                    }))
-                  }
-                  placeholder="Order {{payload.orderId}} created"
-                  type="text"
-                  value={formState.emailSubjectTemplate}
-                />
-              </label>
-
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-700">Body template</span>
-                <textarea
-                  className="min-h-56 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
-                  disabled={Boolean(formState.emailTemplateName)}
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      emailBodyTemplate: event.target.value,
-                    }))
-                  }
-                  placeholder={'Hello {{payload.customer.name}},\n\nYour order {{payload.orderId}} was created.'}
-                  value={formState.emailBodyTemplate}
-                />
-                <p className="text-xs text-slate-500">
-                  {formState.emailTemplateName
-                    ? 'Body template is managed by the selected backend template.'
-                    : 'Inline body uses {{payload.*}} placeholders and is stored in endpoint config.'}
-                </p>
-              </label>
-            </div>
-          ) : null}
-
-          {formState.type === 'WEBHOOK' ? (
-            <div className="space-y-5">
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-700">Webhook URL</span>
-                <input
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      webhookUrl: event.target.value,
-                    }))
-                  }
-                  placeholder="https://example.com/webhooks/notifications"
-                  type="url"
-                  value={formState.webhookUrl}
-                />
-              </label>
-
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-700">Headers JSON</span>
-                <textarea
-                  className="min-h-36 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      webhookHeadersText: event.target.value,
-                    }))
-                  }
-                  placeholder={'{\n  "X-Api-Key": "secret"\n}'}
-                  value={formState.webhookHeadersText}
-                />
-              </label>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">
-                    Connect timeout (ms)
-                  </span>
-                  <input
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                    onChange={(event) =>
-                      setFormState((current) => ({
-                        ...current,
-                        webhookConnectTimeoutMs: event.target.value,
-                      }))
-                    }
-                    placeholder="2000"
-                    type="number"
-                    value={formState.webhookConnectTimeoutMs}
-                  />
-                </label>
-
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">
-                    Response timeout (ms)
-                  </span>
-                  <input
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                    onChange={(event) =>
-                      setFormState((current) => ({
-                        ...current,
-                        webhookResponseTimeoutMs: event.target.value,
-                      }))
-                    }
-                    placeholder="5000"
-                    type="number"
-                    value={formState.webhookResponseTimeoutMs}
-                  />
-                </label>
-
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">
-                    Request timeout (ms)
-                  </span>
-                  <input
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                    onChange={(event) =>
-                      setFormState((current) => ({
-                        ...current,
-                        webhookConnectionRequestTimeoutMs: event.target.value,
-                      }))
-                    }
-                    placeholder="1000"
-                    type="number"
-                    value={formState.webhookConnectionRequestTimeoutMs}
-                  />
-                </label>
-              </div>
-            </div>
-          ) : null}
-
-          {!isStructuredEndpointType(formState.type) ? (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Structured configuration is currently available only for EMAIL and
-                WEBHOOK endpoints. This endpoint type falls back to raw JSON.
-              </div>
-
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-700">Config JSON</span>
-                <textarea
-                  className="min-h-56 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      fallbackConfigText: event.target.value,
-                    }))
-                  }
-                  value={formState.fallbackConfigText}
-                />
-              </label>
-            </div>
-          ) : null}
-
-          {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
             <button
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={endpointMutation.isPending}

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import type { Tenant } from './types'
 
 type TenantsTableProps = {
@@ -84,13 +86,21 @@ export function TenantsTable({
                   {formatDate(tenant.createdAt)}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-                    onClick={() => onEdit(tenant)}
-                    type="button"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    <Link
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                      to={`/tenants/${tenant.id}`}
+                    >
+                      Open
+                    </Link>
+                    <button
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                      onClick={() => onEdit(tenant)}
+                      type="button"
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
