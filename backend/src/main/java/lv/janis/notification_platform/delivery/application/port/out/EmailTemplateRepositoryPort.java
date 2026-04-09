@@ -10,6 +10,8 @@ public interface EmailTemplateRepositoryPort {
 
   EmailTemplate save(EmailTemplate template);
 
+  List<EmailTemplate> findAll();
+
   Optional<EmailTemplate> findById(UUID id);
 
   List<EmailTemplate> findAllByName(String name);

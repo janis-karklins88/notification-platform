@@ -546,29 +546,29 @@ export function EndpointsFormModal({
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block space-y-2">
                     <span className="text-sm font-medium text-slate-700">Template</span>
-                    <select
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                      onChange={(event) =>
-                        setFormState((current) => ({
-                          ...current,
+                  <select
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
                           emailTemplateName: event.target.value,
                         }))
-                      }
-                      value={formState.emailTemplateName}
-                    >
-                      <option value="">Use inline body template</option>
-                      {emailTemplates?.map((template) => (
-                        <option key={template.name} value={template.name}>
-                          {template.name}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-slate-500">
-                      {isEmailTemplatesLoading
-                        ? 'Loading available backend templates...'
-                        : 'Select a backend-owned template or keep the body inline.'}
-                    </p>
-                  </label>
+                    }
+                    value={formState.emailTemplateName}
+                  >
+                    <option value="">Use custom endpoint template</option>
+                    {emailTemplates?.map((template) => (
+                      <option key={template.name} value={template.name}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500">
+                    {isEmailTemplatesLoading
+                      ? 'Loading available backend templates...'
+                      : 'Select a reusable backend template, or use a custom endpoint-specific subject and body.'}
+                  </p>
+                </label>
 
                   <label className="block space-y-2">
                     <span className="text-sm font-medium text-slate-700">Body type</span>

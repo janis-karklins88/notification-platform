@@ -88,6 +88,17 @@ class EmailTemplateAdminControllerTest {
   }
 
   @Test
+  void listAllEmailTemplatesReturnsList() throws Exception {
+    EmailTemplate template = emailTemplate(UUID.randomUUID(), UUID.randomUUID(), "welcome", "Welcome", "Hello", true,
+        "description", true, Instant.parse("2026-01-01T00:00:00Z"));
+    when(emailTemplateUseCase.listAllTemplates()).thenReturn(List.of(template));
+
+    mockMvc.perform(get("/admin/email-templates"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].name").value("welcome"));
+  }
+
+  @Test
   void findTemplatesByNameReturnsList() throws Exception {
     EmailTemplate template = emailTemplate(UUID.randomUUID(), UUID.randomUUID(), "welcome", "Welcome", "Hello", true,
         "description", true, Instant.parse("2026-01-01T00:00:00Z"));

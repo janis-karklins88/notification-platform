@@ -10,6 +10,8 @@ public interface EmailTemplateUseCase {
 
   EmailTemplate getEmailTemplateById(UUID templateId);
 
+  List<EmailTemplate> listAllTemplates();
+
   List<EmailTemplate> findTemplatesByName(String name);
 
   EmailTemplate getTemplateByTenantIdAndName(UUID tenantId, String name);

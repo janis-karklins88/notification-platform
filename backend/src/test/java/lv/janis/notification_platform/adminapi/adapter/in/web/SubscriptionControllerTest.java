@@ -94,6 +94,27 @@ class SubscriptionControllerTest {
   }
 
   @Test
+  void listAllSubscriptionsReturnsPage() throws Exception {
+    UUID tenantId = UUID.randomUUID();
+    UUID endpointId = UUID.randomUUID();
+    UUID subscriptionId = UUID.randomUUID();
+    var endpoint = mockEndpoint(endpointId);
+    var subscription = subscription(subscriptionId, tenantId, "EVENT_CREATED", endpoint, SubscriptionStatus.PAUSED,
+        Instant.parse("2026-01-01T00:00:00Z"), Instant.parse("2026-01-01T00:00:00Z"));
+    when(subscriptionUseCase.listSubscriptions(org.mockito.ArgumentMatchers.argThat(
+        query -> query.tenantId() == null && query.page() == 0 && query.size() == 20
+            && query.status() == SubscriptionStatus.PAUSED)))
+        .thenReturn(new PageImpl<>(List.of(subscription), PageRequest.of(0, 20), 1));
+
+    mockMvc.perform(get("/admin/subscriptions").param("status", "PAUSED"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items").isArray())
+        .andExpect(jsonPath("$.items[0].id").value(subscriptionId.toString()))
+        .andExpect(jsonPath("$.items[0].tenantId").value(tenantId.toString()))
+        .andExpect(jsonPath("$.items[0].eventType").value("EVENT_CREATED"));
+  }
+
+  @Test
   void deactivateSubscriptionReturnsNoContent() throws Exception {
     UUID subscriptionId = UUID.randomUUID();
 

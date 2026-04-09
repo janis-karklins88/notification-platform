@@ -3,6 +3,9 @@ import type { EmailTemplate } from './types'
 type EmailTemplatesTableProps = {
   templates: EmailTemplate[]
   loading: boolean
+  showTenantColumn?: boolean
+  tenantNamesById?: Record<string, string>
+  onPreview: (template: EmailTemplate) => void
   onEdit: (template: EmailTemplate) => void
   onDelete: (templateId: string) => void
 }
@@ -22,6 +25,9 @@ function truncate(value: string, maxLength: number) {
 export function EmailTemplatesTable({
   templates,
   loading,
+  showTenantColumn = false,
+  tenantNamesById = {},
+  onPreview,
   onEdit,
   onDelete,
 }: EmailTemplatesTableProps) {
@@ -50,6 +56,11 @@ export function EmailTemplatesTable({
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
+              {showTenantColumn ? (
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Tenant
+                </th>
+              ) : null}
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Name
               </th>
@@ -66,18 +77,21 @@ export function EmailTemplatesTable({
                 Created
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Actions
+                
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
             {templates.map((template) => (
               <tr key={template.id} className="hover:bg-slate-50">
+                {showTenantColumn ? (
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {tenantNamesById[template.tenantId] ?? template.tenantId}
+                  </td>
+                ) : null}
                 <td className="px-4 py-3">
                   <p className="text-sm font-medium text-slate-900">{template.name}</p>
-                  <p className="mt-1 max-w-md text-sm text-slate-600">
-                    {truncate(template.body, 96)}
-                  </p>
+                  
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
                   {template.html ? 'HTML' : 'Text'}
@@ -95,6 +109,13 @@ export function EmailTemplatesTable({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-2">
+                    <button
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                      onClick={() => onPreview(template)}
+                      type="button"
+                    >
+                      Preview
+                    </button>
                     <button
                       className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
                       onClick={() => onEdit(template)}

@@ -34,7 +34,6 @@ export function SubscriptionsPage() {
   } = useQuery({
     queryKey: ['subscriptions', filters],
     queryFn: () => listSubscriptions(filters),
-    enabled: Boolean(filters.tenantId),
   })
 
   const { data: tenantOptions } = useQuery({
@@ -58,6 +57,10 @@ export function SubscriptionsPage() {
       }),
     enabled: Boolean(filters.tenantId),
   })
+
+  const tenantNamesById = Object.fromEntries(
+    (tenantOptions?.items ?? []).map((tenantOption) => [tenantOption.id, tenantOption.name]),
+  )
 
   const subscriptionActionMutation = useMutation({
     mutationFn: async (variables: {
@@ -113,9 +116,7 @@ export function SubscriptionsPage() {
   }
 
   function handleRefresh() {
-    if (filters.tenantId) {
-      refetch()
-    }
+    refetch()
   }
 
   function handlePageChange(page: number) {
@@ -146,7 +147,7 @@ export function SubscriptionsPage() {
           <p className="mt-1 text-sm text-slate-600">
             {routeTenantId
               ? 'Manage event routing subscriptions for the selected tenant.'
-              : 'Manage event routing subscriptions by tenant.'}
+              : 'Manage event routing subscriptions across tenants.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -188,13 +189,11 @@ export function SubscriptionsPage() {
 
       <SubscriptionsTable
         emptyMessage={
-          filters.tenantId
-            ? 'No subscriptions found.'
-            : 'Select a tenant to view subscriptions.'
+          'No subscriptions found.'
         }
         hasNext={data?.hasNext ?? false}
         hasPrevious={data?.hasPrevious ?? false}
-        loading={Boolean(filters.tenantId) && isPending}
+        loading={isPending}
         onDeactivate={(subscriptionId) =>
           subscriptionActionMutation.mutate({
             action: 'deactivate',
@@ -212,8 +211,10 @@ export function SubscriptionsPage() {
           })
         }
         page={data?.page ?? filters.page ?? 0}
-        showEmptyState={!filters.tenantId || (data?.items?.length ?? 0) === 0}
+        showEmptyState={(data?.items?.length ?? 0) === 0}
+        showTenantColumn={!routeTenantId}
         subscriptions={data?.items ?? []}
+        tenantNamesById={tenantNamesById}
         totalElements={data?.totalElements ?? 0}
         totalPages={data?.totalPages ?? 0}
       />

@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { NavLink, useParams } from 'react-router-dom'
+import { NavLink, useLocation, useParams } from 'react-router-dom'
 
 import { getTenantById } from '../../api/tenantsApi'
 
 const globalNavItems = [
-  { to: '/', label: 'Dashboard' },
   { to: '/tenants', label: 'Tenants' },
   { to: '/deliveries', label: 'Deliveries' },
 ] as const
@@ -18,13 +17,35 @@ function getNavLinkClassName({ isActive }: { isActive: boolean }) {
   ].join(' ')
 }
 
+function getSubNavLinkClassName({ isActive }: { isActive: boolean }) {
+  return [
+    'rounded-md border-l-2 px-3 py-1.5 text-xs font-medium transition-colors',
+    isActive
+      ? 'border-slate-400 bg-slate-100 text-slate-900'
+      : 'border-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-700',
+  ].join(' ')
+}
+
 export const Sidebar = () => {
+  const location = useLocation()
   const { tenantId } = useParams()
   const { data: tenant } = useQuery({
     queryKey: ['tenant', tenantId],
     queryFn: () => getTenantById(tenantId!),
     enabled: Boolean(tenantId),
   })
+
+  const isTenantArea = location.pathname === '/tenants'
+    || location.pathname.startsWith('/tenants/')
+
+  const tenantResourceNavItems = !tenantId && isTenantArea
+    ? [
+        { to: '/tenants/endpoints', label: 'Endpoints' },
+        { to: '/tenants/subscriptions', label: 'Subscriptions' },
+        { to: '/tenants/api-keys', label: 'API Keys' },
+        { to: '/tenants/email-templates', label: 'Email Templates' },
+      ]
+    : []
 
   const tenantNavItems = tenantId
     ? [
@@ -51,12 +72,29 @@ export const Sidebar = () => {
           </p>
           <nav className="flex flex-col gap-1">
             {globalNavItems.map((item) => (
-              <NavLink key={item.to} className={getNavLinkClassName} end={item.to === '/'} to={item.to}>
+              <NavLink key={item.to} className={getNavLinkClassName} to={item.to}>
                 {item.label}
               </NavLink>
             ))}
           </nav>
         </div>
+
+        {tenantResourceNavItems.length > 0 ? (
+          <div>
+            <div className="mb-2 px-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Tenant Resources
+              </p>
+            </div>
+            <nav className="flex flex-col gap-1">
+              {tenantResourceNavItems.map((item) => (
+                <NavLink key={item.to} className={getSubNavLinkClassName} to={item.to}>
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        ) : null}
 
         {tenantId ? (
           <div>
@@ -71,7 +109,7 @@ export const Sidebar = () => {
             </div>
             <nav className="flex flex-col gap-1">
               {tenantNavItems.map((item) => (
-                <NavLink key={item.to} className={getNavLinkClassName} end={item.end} to={item.to}>
+                <NavLink key={item.to} className={getSubNavLinkClassName} end={item.end} to={item.to}>
                   {item.label}
                 </NavLink>
               ))}

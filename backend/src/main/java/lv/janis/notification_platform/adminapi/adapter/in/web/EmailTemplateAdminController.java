@@ -58,6 +58,15 @@ public class EmailTemplateAdminController {
     return ResponseEntity.ok(EmailTemplateResponse.from(emailTemplateUseCase.getEmailTemplateById(templateId)));
   }
 
+  @GetMapping("/email-templates")
+  @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+  public ResponseEntity<List<EmailTemplateResponse>> listAllEmailTemplates() {
+    var response = emailTemplateUseCase.listAllTemplates().stream()
+        .map(EmailTemplateResponse::from)
+        .toList();
+    return ResponseEntity.ok(response);
+  }
+
   @GetMapping("/email-templates/by-name")
   @PreAuthorize("hasRole('PLATFORM_ADMIN')")
   public ResponseEntity<List<EmailTemplateResponse>> findTemplatesByName(@RequestParam @NotBlank String name) {

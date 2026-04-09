@@ -7,8 +7,12 @@ import type {
 } from '../features/emailTemplates/types'
 
 export async function listEmailTemplates(tenantId: string): Promise<EmailTemplate[]> {
+  const path = tenantId
+    ? `/admin/tenants/${tenantId}/email-templates`
+    : '/admin/email-templates'
+
   return apiFetch({
-    path: `/admin/tenants/${tenantId}/email-templates`,
+    path,
     method: 'GET',
   })
 }

@@ -68,6 +68,23 @@ public class SubscriptionController {
     return ResponseEntity.ok(PageResponse.from(result, SubscriptionResponse::from));
   }
 
+  @GetMapping("/subscriptions")
+  @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+  public ResponseEntity<PageResponse<SubscriptionResponse>> listAllSubscriptions(
+      @RequestParam(required = false) UUID tenantId,
+      @RequestParam(defaultValue = "0") @Min(0) int page,
+      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+      @RequestParam(required = false) String eventType,
+      @RequestParam(required = false) UUID endpointId,
+      @RequestParam(required = false) SubscriptionStatus status,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdAfter,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdBefore) {
+    var query = new ListSubscriptionsQuery(tenantId, eventType, endpointId, status, createdAfter, createdBefore, page,
+        size);
+    Page<Subscription> result = subscriptionUseCase.listSubscriptions(query);
+    return ResponseEntity.ok(PageResponse.from(result, SubscriptionResponse::from));
+  }
+
   @PostMapping("/subscriptions/{subscriptionId}/deactivate")
   @PreAuthorize("hasRole('PLATFORM_ADMIN')")
   public ResponseEntity<Void> deactivateSubscription(@PathVariable UUID subscriptionId) {

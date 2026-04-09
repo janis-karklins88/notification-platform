@@ -103,7 +103,7 @@ export function EmailTemplateFormModal({
         notifyCreated('Email template')
       }
 
-      await queryClient.invalidateQueries({ queryKey: ['emailTemplates', tenantId] })
+      await queryClient.invalidateQueries({ queryKey: ['emailTemplates'] })
       onClose()
     },
     onError: (err) => {

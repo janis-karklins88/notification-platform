@@ -85,6 +85,18 @@ class EmailTemplateServiceTest {
   }
 
   @Test
+  void listAllTemplatesReturnsOnlyActiveTemplates() {
+    UUID tenantId = UUID.randomUUID();
+    EmailTemplate active = emailTemplate(UUID.randomUUID(), tenant(tenantId), "welcome", "subject", "body", true, null, true);
+    EmailTemplate inactive = emailTemplate(UUID.randomUUID(), tenant(tenantId), "old", "subject", "body", true, null, false);
+    when(emailTemplateRepository.findAll()).thenReturn(List.of(active, inactive));
+
+    List<EmailTemplate> result = service.listAllTemplates();
+
+    assertEquals(List.of(active), result);
+  }
+
+  @Test
   void findTemplatesByNameReturnsOnlyActiveTemplates() {
     UUID tenantId = UUID.randomUUID();
     EmailTemplate active = emailTemplate(UUID.randomUUID(), tenant(tenantId), "welcome", "subject", "body", true, null, true);

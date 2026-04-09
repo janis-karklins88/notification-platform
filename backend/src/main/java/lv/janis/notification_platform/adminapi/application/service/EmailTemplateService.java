@@ -53,6 +53,12 @@ public class EmailTemplateService implements EmailTemplateUseCase {
 
   @Override
   @Transactional(readOnly = true)
+  public List<EmailTemplate> listAllTemplates() {
+    return activeOnly(emailTemplateRepository.findAll());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public List<EmailTemplate> findTemplatesByName(String name) {
     return activeOnly(emailTemplateRepository.findAllByName(name));
   }

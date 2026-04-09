@@ -23,6 +23,11 @@ public class EmailTemplateRepositoryAdapter implements EmailTemplateRepositoryPo
   }
 
   @Override
+  public List<EmailTemplate> findAll() {
+    return emailTemplateJpaRepository.findAll();
+  }
+
+  @Override
   public Optional<EmailTemplate> findById(UUID id) {
     return emailTemplateJpaRepository.findById(id);
   }

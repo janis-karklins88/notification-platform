@@ -1,9 +1,8 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 
 import { AppLayout } from '../layouts/AppLayout'
 import { ApiKeysPage } from '../pages/ApiKeysPage'
 import { DeliveryMonitoringPage } from '../pages/DeliveryMonitoringPage'
-import { DashboardPage } from '../pages/DashboardPage'
 import { EmailTemplatesPage } from '../pages/EmailTemplatesPage'
 import { EndpointsPage } from '../pages/EndpointsPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -16,8 +15,12 @@ export const router = createBrowserRouter([
     path: '/',
     element: <AppLayout />,
     children: [
-      { index: true, element: <DashboardPage /> },
+      { index: true, element: <Navigate replace to="/tenants" /> },
       { path: 'tenants', element: <TenantsPage /> },
+      { path: 'tenants/endpoints', element: <EndpointsPage /> },
+      { path: 'tenants/subscriptions', element: <SubscriptionsPage /> },
+      { path: 'tenants/api-keys', element: <ApiKeysPage /> },
+      { path: 'tenants/email-templates', element: <EmailTemplatesPage /> },
       { path: 'tenants/:tenantId', element: <TenantOverviewPage /> },
       { path: 'tenants/:tenantId/endpoints', element: <EndpointsPage /> },
       { path: 'tenants/:tenantId/subscriptions', element: <SubscriptionsPage /> },

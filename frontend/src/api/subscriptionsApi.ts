@@ -10,14 +10,11 @@ import type {
 export async function listSubscriptions(
   filter: SubscriptionFilter,
 ): Promise<PageResponse<Subscription>> {
-  if (!filter.tenantId) {
-    throw new Error('Tenant is required to list subscriptions.')
-  }
-
   const queryParams = new URLSearchParams()
 
   if (filter.page !== undefined) queryParams.set('page', String(filter.page))
   if (filter.size !== undefined) queryParams.set('size', String(filter.size))
+  if (filter.tenantId) queryParams.set('tenantId', filter.tenantId)
   if (filter.eventType) queryParams.set('eventType', filter.eventType)
   if (filter.endpointId) queryParams.set('endpointId', filter.endpointId)
   if (filter.status) queryParams.set('status', filter.status)
@@ -25,9 +22,12 @@ export async function listSubscriptions(
   if (filter.createdBefore) queryParams.set('createdBefore', filter.createdBefore)
 
   const query = queryParams.toString()
+  const path = filter.tenantId
+    ? `/admin/tenants/${filter.tenantId}/subscriptions${query ? `?${query}` : ''}`
+    : `/admin/subscriptions${query ? `?${query}` : ''}`
 
   return apiFetch({
-    path: `/admin/tenants/${filter.tenantId}/subscriptions${query ? `?${query}` : ''}`,
+    path,
     method: 'GET',
   })
 }

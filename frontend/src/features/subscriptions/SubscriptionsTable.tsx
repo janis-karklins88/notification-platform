@@ -5,6 +5,8 @@ type SubscriptionsTableProps = {
   loading: boolean
   emptyMessage: string
   showEmptyState: boolean
+  showTenantColumn?: boolean
+  tenantNamesById?: Record<string, string>
   page: number
   totalPages: number
   totalElements: number
@@ -25,6 +27,8 @@ export function SubscriptionsTable({
   loading,
   emptyMessage,
   showEmptyState,
+  showTenantColumn = false,
+  tenantNamesById = {},
   page,
   totalPages,
   totalElements,
@@ -59,6 +63,11 @@ export function SubscriptionsTable({
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
+              {showTenantColumn ? (
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Tenant
+                </th>
+              ) : null}
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Event type
               </th>
@@ -79,6 +88,11 @@ export function SubscriptionsTable({
           <tbody className="divide-y divide-slate-200 bg-white">
             {subscriptions.map((subscription) => (
               <tr key={subscription.id} className="hover:bg-slate-50">
+                {showTenantColumn ? (
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {tenantNamesById[subscription.tenantId] ?? subscription.tenantId}
+                  </td>
+                ) : null}
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">
                   {subscription.eventType}
                 </td>
