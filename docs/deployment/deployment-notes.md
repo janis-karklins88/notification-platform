@@ -111,6 +111,9 @@ For production:
 - either run Keycloak properly with persistent storage and backup strategy
 - or use a managed identity provider
 
+For local/dev convenience, this repo bootstraps Keycloak with a realm import file.
+
+
 Admin auth expectations remain the same:
 
 - backend validates JWT issuer

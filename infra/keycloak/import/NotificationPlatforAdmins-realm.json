@@ -1,0 +1,78 @@
+{
+  "realm": "NotificationPlatforAdmins",
+  "enabled": true,
+  "displayName": "Notification Platform Admins",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "PLATFORM_ADMIN",
+        "description": "Platform administrator role for Notification Platform admin APIs"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "notification-platform-frontend",
+      "name": "Notification Platform Frontend",
+      "description": "Public SPA client for the Notification Platform admin UI",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "http://localhost:5173",
+      "adminUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "platform-admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Platform",
+      "lastName": "Admin",
+      "email": "platform-admin@example.local",
+      "realmRoles": [
+        "PLATFORM_ADMIN"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "platform-admin",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

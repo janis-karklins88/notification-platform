@@ -91,6 +91,7 @@ Default infrastructure credentials:
 - PostgreSQL: `notif / notif`
 - RabbitMQ: `notif / notif`
 - Keycloak admin: `admin / admin`
+- Seeded Keycloak app user: `platform-admin / platform-admin`
 - Grafana: `admin / admin`
 
 ### 2. Start Backend
@@ -161,17 +162,23 @@ Current frontend auth config expects:
 - Keycloak realm: `NotificationPlatforAdmins`
 - Keycloak client: `notification-platform-frontend`
 
-The repo does not currently include an automatic realm import, so realm, client, role, and user setup are manual.
+For Docker-based local setup, the repo now includes an automatic Keycloak realm import.
 
-Minimum Keycloak setup:
+By default, Docker Compose imports:
 
-1. Create realm `NotificationPlatforAdmins`
-2. Create client `notification-platform-frontend`
-3. Create realm role `PLATFORM_ADMIN`
-4. Create a user and assign `PLATFORM_ADMIN`
-5. Log in through the frontend
+1. Realm `NotificationPlatforAdmins`
+2. Client `notification-platform-frontend`
+3. Realm role `PLATFORM_ADMIN`
+4. Dev user `platform-admin`
 
 Detailed setup steps are documented in `docs/auth/keycloak-setup.md`.
+
+Important:
+
+- Keycloak imports realms from `infra/keycloak/import`
+- import happens on startup only when the realm does not already exist
+- if you already have an existing Keycloak database volume, the import will be skipped
+- to re-seed from scratch locally, remove the Keycloak database volume and start the stack again
 
 ## Main Admin Areas
 
