@@ -171,6 +171,8 @@ Minimum Keycloak setup:
 4. Create a user and assign `PLATFORM_ADMIN`
 5. Log in through the frontend
 
+Detailed setup steps are documented in `docs/auth/keycloak-setup.md`.
+
 ## Main Admin Areas
 
 The admin UI is tenant-first.
@@ -365,3 +367,11 @@ npm run build
 - Mail delivery can be inspected in MailHog at `http://localhost:8025`
 - Delivery retry and DLQ notes are documented in `docs/delivery/delivery-retry-dlq-flow.md`
 - The frontend sub-navigation supports both global resource views and tenant-scoped views
+
+## Further Docs
+
+- `docs/auth/keycloak-setup.md`
+- `docs/architecture/architecture-overview.md`
+- `docs/architecture/event-lifecycle.md`
+- `docs/deployment/deployment-notes.md`
+- `docs/delivery/delivery-retry-dlq-flow.md`
