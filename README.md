@@ -162,7 +162,7 @@ Current frontend auth config expects:
 - Keycloak realm: `NotificationPlatforAdmins`
 - Keycloak client: `notification-platform-frontend`
 
-For Docker-based local setup, the repo now includes an automatic Keycloak realm import.
+For Docker-based local setup, the repo includes an automatic Keycloak realm import.
 
 By default, Docker Compose imports:
 
