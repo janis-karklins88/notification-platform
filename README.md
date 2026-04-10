@@ -66,7 +66,7 @@ Recommended local setup:
 - Run backend locally with the `local` profile
 - Run frontend locally with Vite
 
-This is the easiest setup for development and metrics, because the `local` backend profile exposes `/actuator/prometheus`.
+This is still the easiest setup for development, but both `local` and `docker` backend profiles now expose Prometheus metrics.
 
 ### 1. Start Infrastructure
 
@@ -148,8 +148,9 @@ docker compose up -d
 
 Note:
 
-- The backend `docker` profile currently exposes only `health` and `info` actuator endpoints.
-- Prometheus scraping works best when the backend is run locally with the `local` profile.
+- The backend `docker` profile now exposes `health`, `info`, `metrics`, and `prometheus`.
+- Prometheus in Docker is configured to scrape `host.docker.internal:8080/actuator/prometheus`.
+- If you run the backend in Docker on port `8080`, Prometheus and Grafana can monitor it without the backend running locally.
 
 ## Authentication
 
@@ -311,7 +312,7 @@ Outbox statuses:
 
 ### Prometheus
 
-With the backend running locally on the `local` profile:
+With the backend running on port `8080` in either `local` or `docker` profile:
 
 - metrics endpoint: `http://localhost:8080/actuator/prometheus`
 - Prometheus UI: `http://localhost:9090`
