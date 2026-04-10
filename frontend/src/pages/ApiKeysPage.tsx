@@ -7,7 +7,7 @@ import { listApiKeys, revokeApiKey } from '../api/apiKeysApi'
 import { ApiKeysFilters } from '../features/apiKeys/ApiKeysFilters'
 import { ApiKeysFormModal } from '../features/apiKeys/ApiKeysFormModal'
 import { ApiKeysTable } from '../features/apiKeys/ApiKeysTable'
-import type { ApiKeyFilter } from '../features/apiKeys/types'
+import type { ApiKey, ApiKeyFilter, CreateApiKeyResponse, PageResponse } from '../features/apiKeys/types'
 import { notifySuccess } from '../lib/notifications'
 
 export function ApiKeysPage() {
@@ -64,6 +64,55 @@ export function ApiKeysPage() {
 
   function handleRefresh() {
     refetch()
+  }
+
+  function handleCreated(createdApiKey: CreateApiKeyResponse) {
+    const nextFilters: ApiKeyFilter = {
+      ...filters,
+      page: 0,
+      tenantId: routeTenantId ?? createdApiKey.tenantId,
+    }
+
+    const createdListItem: ApiKey = {
+      id: createdApiKey.id,
+      keyPrefix: createdApiKey.keyPrefix,
+      status: createdApiKey.status,
+      createdAt: createdApiKey.createdAt,
+      revokedAt: null,
+      lastUsedAt: null,
+    }
+
+    queryClient.setQueryData<PageResponse<ApiKey>>(
+      ['apiKeys', nextFilters],
+      (current) => {
+        if (!current) {
+          return {
+            items: [createdListItem],
+            page: 0,
+            size: nextFilters.size ?? 20,
+            totalElements: 1,
+            totalPages: 1,
+            hasNext: false,
+            hasPrevious: false,
+          }
+        }
+
+        const items = [createdListItem, ...current.items.filter((item) => item.id !== createdListItem.id)]
+          .slice(0, current.size)
+        const totalElements = current.totalElements + 1
+
+        return {
+          ...current,
+          items,
+          page: 0,
+          totalElements,
+          totalPages: Math.max(1, Math.ceil(totalElements / current.size)),
+          hasPrevious: false,
+        }
+      },
+    )
+
+    setFilters(nextFilters)
   }
 
   function handlePageChange(page: number) {
@@ -144,6 +193,7 @@ export function ApiKeysPage() {
 
       <ApiKeysFormModal
         onClose={() => setIsFormModalOpen(false)}
+        onCreated={handleCreated}
         open={isFormModalOpen}
         tenantOptions={
           routeTenantId

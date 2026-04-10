@@ -44,6 +44,7 @@ export const Sidebar = () => {
         { to: '/tenants/subscriptions', label: 'Subscriptions' },
         { to: '/tenants/api-keys', label: 'API Keys' },
         { to: '/tenants/email-templates', label: 'Email Templates' },
+        { to: '/tenants/deliveries', label: 'Deliveries' },
       ]
     : []
 
@@ -54,6 +55,7 @@ export const Sidebar = () => {
         { to: `/tenants/${tenantId}/subscriptions`, label: 'Subscriptions' },
         { to: `/tenants/${tenantId}/api-keys`, label: 'API Keys' },
         { to: `/tenants/${tenantId}/email-templates`, label: 'Email Templates' },
+        { to: `/tenants/${tenantId}/deliveries`, label: 'Deliveries' },
       ]
     : []
 

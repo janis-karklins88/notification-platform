@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useParams } from 'react-router-dom'
 
 import { listDeliveries } from '../api/deliveriesApi'
 import { listEndpoints } from '../api/endpointsApi'
-import { listTenants } from '../api/tenantsApi'
+import { getTenantById, listTenants } from '../api/tenantsApi'
 import { DeliveriesFilters } from '../features/deliveries/DeliveriesFilters'
 import { DeliveryDetailsModal } from '../features/deliveries/DeliveryDetailsModal'
 import { DeliveriesTable } from '../features/deliveries/DeliveriesTable'
 import type { Delivery, DeliveryFilter } from '../features/deliveries/types'
 
 export function DeliveryMonitoringPage() {
-  const [filters, setFilters] = useState<DeliveryFilter>({ page: 0, size: 20 })
+  const { tenantId: routeTenantId } = useParams()
+  const [filters, setFilters] = useState<DeliveryFilter>({
+    page: 0,
+    size: 20,
+    tenantId: routeTenantId,
+  })
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null)
 
   const {
@@ -26,6 +32,12 @@ export function DeliveryMonitoringPage() {
   const { data: tenantOptions } = useQuery({
     queryKey: ['tenants', 'options'],
     queryFn: () => listTenants({ page: 0, size: 100 }),
+  })
+
+  const { data: tenant } = useQuery({
+    queryKey: ['tenant', routeTenantId],
+    queryFn: () => getTenantById(routeTenantId!),
+    enabled: Boolean(routeTenantId),
   })
 
   const { data: endpointOptions } = useQuery({
@@ -47,12 +59,13 @@ export function DeliveryMonitoringPage() {
     setFilters((current) => ({
       ...current,
       ...next,
+      tenantId: routeTenantId ?? next.tenantId ?? current.tenantId,
       page: 0,
     }))
   }
 
   function handleResetFilters() {
-    setFilters({ page: 0, size: 20 })
+    setFilters({ page: 0, size: 20, tenantId: routeTenantId })
   }
 
   function handleRefresh() {
@@ -70,9 +83,13 @@ export function DeliveryMonitoringPage() {
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Deliveries</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {tenant ? `${tenant.name} Deliveries` : 'Deliveries'}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Monitor delivery attempts across channels and tenants.
+            {routeTenantId
+              ? 'Monitor delivery attempts for the selected tenant.'
+              : 'Monitor delivery attempts across channels and tenants.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -90,6 +107,7 @@ export function DeliveryMonitoringPage() {
         endpointOptions={endpointOptions?.items ?? []}
         onChange={handleFiltersChange}
         onReset={handleResetFilters}
+        tenantLocked={Boolean(routeTenantId)}
         tenantOptions={tenantOptions?.items ?? []}
         value={filters}
       />
@@ -108,6 +126,7 @@ export function DeliveryMonitoringPage() {
         onPageChange={handlePageChange}
         onViewDetails={setSelectedDelivery}
         page={data?.page ?? filters.page ?? 0}
+        showTenantColumn={!routeTenantId}
         tenantNamesById={tenantNamesById}
         totalElements={data?.totalElements ?? 0}
         totalPages={data?.totalPages ?? 0}

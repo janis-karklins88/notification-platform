@@ -14,6 +14,7 @@ type DeliveriesFiltersProps = {
   onReset: () => void
   tenantOptions: Tenant[]
   endpointOptions: Endpoint[]
+  tenantLocked?: boolean
 }
 
 type FilterFormState = {
@@ -43,6 +44,7 @@ export function DeliveriesFilters({
   onReset,
   tenantOptions,
   endpointOptions,
+  tenantLocked = false,
 }: DeliveriesFiltersProps) {
   const [formState, setFormState] = useState<FilterFormState>({
     eventId: value.eventId ?? '',
@@ -118,7 +120,8 @@ export function DeliveriesFilters({
         <label className="space-y-2">
           <span className="text-sm font-medium text-slate-700">Tenant</span>
           <select
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 disabled:bg-slate-100"
+            disabled={tenantLocked}
             name="tenantId"
             onChange={handleFieldChange}
             value={value.tenantId ?? ''}

@@ -9,17 +9,20 @@ import type { CreateApiKeyResponse } from './types'
 type ApiKeysFormModalProps = {
   open: boolean
   onClose: () => void
+  onCreated?: (response: CreateApiKeyResponse) => void
   tenantOptions: Tenant[]
 }
 
 export function ApiKeysFormModal({
   open,
   onClose,
+  onCreated,
   tenantOptions,
 }: ApiKeysFormModalProps) {
   const [tenantId, setTenantId] = useState('')
   const [error, setError] = useState('')
   const [createdApiKey, setCreatedApiKey] = useState<CreateApiKeyResponse | null>(null)
+  const [wasOpen, setWasOpen] = useState(false)
   const queryClient = useQueryClient()
   const createApiKeyMutation = useMutation({
     mutationFn: async () => createApiKey(tenantId),
@@ -27,6 +30,7 @@ export function ApiKeysFormModal({
       setCreatedApiKey(response)
       notifyCreated('API key')
       await queryClient.invalidateQueries({ queryKey: ['apiKeys'] })
+      onCreated?.(response)
     },
     onError: (err) => {
       if (err instanceof Error) {
@@ -38,13 +42,14 @@ export function ApiKeysFormModal({
   })
 
   useEffect(() => {
-    if (open) {
+    if (open && !wasOpen) {
       setTenantId(tenantOptions[0]?.id ?? '')
       setError('')
       setCreatedApiKey(null)
       createApiKeyMutation.reset()
     }
-  }, [open, tenantOptions])
+    setWasOpen(open)
+  }, [createApiKeyMutation, open, tenantOptions, wasOpen])
 
   if (!open) {
     return null

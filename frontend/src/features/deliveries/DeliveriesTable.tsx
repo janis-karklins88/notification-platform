@@ -3,6 +3,7 @@ import type { Delivery } from './types'
 type DeliveriesTableProps = {
   deliveries: Delivery[]
   tenantNamesById: Record<string, string>
+  showTenantColumn?: boolean
   loading: boolean
   page: number
   totalPages: number
@@ -20,6 +21,7 @@ function formatDate(value: string | null) {
 export function DeliveriesTable({
   deliveries,
   tenantNamesById,
+  showTenantColumn = true,
   loading,
   page,
   totalPages,
@@ -53,9 +55,11 @@ export function DeliveriesTable({
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Tenant
-              </th>
+              {showTenantColumn ? (
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Tenant
+                </th>
+              ) : null}
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Channel
               </th>
@@ -79,9 +83,11 @@ export function DeliveriesTable({
           <tbody className="divide-y divide-slate-200 bg-white">
             {deliveries.map((delivery) => (
               <tr key={delivery.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 text-sm text-slate-600">
-                  {tenantNamesById[delivery.tenantId] ?? delivery.tenantId}
-                </td>
+                {showTenantColumn ? (
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {tenantNamesById[delivery.tenantId] ?? delivery.tenantId}
+                  </td>
+                ) : null}
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">
                   {delivery.channel}
                 </td>
