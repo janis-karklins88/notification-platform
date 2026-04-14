@@ -5,11 +5,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import lv.janis.notification_platform.ingest.application.service.IngestRateLimitProperties;
 import lv.janis.notification_platform.outbox.application.service.OutboxDispatchProperties;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableConfigurationProperties(OutboxDispatchProperties.class)
+@EnableConfigurationProperties({
+		IngestRateLimitProperties.class,
+		OutboxDispatchProperties.class
+})
 public class NotificationPlatformApplication {
 
 	public static void main(String[] args) {

@@ -39,6 +39,26 @@
       "name": "notification.email.from",
       "type": "java.lang.String",
       "description": "Send from when its left empty in config"
+    },
+    {
+      "name": "app.rate-limit.ingest.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether POST /ingest rate limiting is enabled."
+    },
+    {
+      "name": "app.rate-limit.ingest.limit",
+      "type": "java.lang.Integer",
+      "description": "Token bucket capacity and refill amount for POST /ingest requests per API key."
+    },
+    {
+      "name": "app.rate-limit.ingest.window",
+      "type": "java.time.Duration",
+      "description": "Duration over which the POST /ingest token bucket refills back to capacity."
+    },
+    {
+      "name": "app.rate-limit.ingest.fail-open",
+      "type": "java.lang.Boolean",
+      "description": "Whether ingest requests are allowed when Redis is unavailable for rate-limit checks."
     }
   ]
 }

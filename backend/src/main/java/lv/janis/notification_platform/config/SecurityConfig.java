@@ -35,6 +35,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import lv.janis.notification_platform.auth.adapter.in.security.ApiKeyAuthenticationFilter;
 import lv.janis.notification_platform.auth.application.port.out.ApiKeyRepositoryPort;
 import lv.janis.notification_platform.auth.application.service.ApiKeyHasher;
+import lv.janis.notification_platform.ingest.adapter.in.web.IngestRateLimitFilter;
+import lv.janis.notification_platform.ingest.application.service.IngestRateLimiter;
 
 @Configuration
 @EnableMethodSecurity
@@ -45,6 +47,11 @@ public class SecurityConfig {
       ApiKeyRepositoryPort apiKeyRepositoryPort,
       ApiKeyHasher apiKeyHasher) {
     return new ApiKeyAuthenticationFilter(apiKeyRepositoryPort, apiKeyHasher);
+  }
+
+  @Bean
+  IngestRateLimitFilter ingestRateLimitFilter(IngestRateLimiter ingestRateLimiter) {
+    return new IngestRateLimitFilter(ingestRateLimiter);
   }
 
   @Bean
@@ -75,7 +82,10 @@ public class SecurityConfig {
 
   @Bean
   @Order(2)
-  SecurityFilterChain ingestSecurity(HttpSecurity http, ApiKeyAuthenticationFilter apiKeyAuthenticationFilter)
+  SecurityFilterChain ingestSecurity(
+      HttpSecurity http,
+      ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
+      IngestRateLimitFilter ingestRateLimitFilter)
       throws Exception {
     return http
         .securityMatcher("/ingest/**")
@@ -84,6 +94,7 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
         .addFilterBefore(apiKeyAuthenticationFilter, AnonymousAuthenticationFilter.class)
+        .addFilterAfter(ingestRateLimitFilter, ApiKeyAuthenticationFilter.class)
         .build();
   }
 
@@ -108,8 +119,13 @@ public class SecurityConfig {
         .filter(origin -> !origin.isEmpty())
         .toList());
     configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-    configuration.setExposedHeaders(List.of("Location"));
+    configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-API-Key"));
+    configuration.setExposedHeaders(List.of(
+        "Location",
+        "Retry-After",
+        IngestRateLimitFilter.RATE_LIMIT_LIMIT_HEADER,
+        IngestRateLimitFilter.RATE_LIMIT_REMAINING_HEADER,
+        IngestRateLimitFilter.RATE_LIMIT_RESET_HEADER));
     configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

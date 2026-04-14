@@ -1,6 +1,6 @@
 # Notification Platform
 
-Multi-tenant event-driven notification platform built with Spring Boot, RabbitMQ, PostgreSQL, React, and Keycloak.
+Multi-tenant event-driven notification platform built with Spring Boot, RabbitMQ, PostgreSQL, Redis, React, and Keycloak.
 
 It accepts events through an ingest API, routes them through tenant subscriptions, and delivers them through tenant-owned endpoints such as email and webhooks.
 
@@ -25,7 +25,7 @@ It accepts events through an ingest API, routes them through tenant subscription
 
 - Backend: Java 21, Spring Boot 3, Spring Security, Spring Data JPA, Flyway
 - Frontend: React 19, TypeScript, Vite, React Query, React Router
-- Infrastructure: PostgreSQL, RabbitMQ, Keycloak, MailHog, Prometheus, Grafana
+- Infrastructure: PostgreSQL, RabbitMQ, Redis, Keycloak, MailHog, Prometheus, Grafana
 
 ## Repository Layout
 
@@ -73,7 +73,7 @@ This is still the easiest setup for development, but both `local` and `docker` b
 From the repository root:
 
 ```powershell
-docker compose up -d postgres rabbitmq mailhog keycloak prometheus grafana
+docker compose up -d postgres rabbitmq redis mailhog keycloak prometheus grafana
 ```
 
 Useful URLs:
@@ -83,6 +83,7 @@ Useful URLs:
 - Keycloak: `http://localhost:8081`
 - MailHog: `http://localhost:8025`
 - RabbitMQ UI: `http://localhost:15672`
+- Redis: `localhost:6379`
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000`
 
@@ -90,6 +91,7 @@ Default infrastructure credentials:
 
 - PostgreSQL: `notif / notif`
 - RabbitMQ: `notif / notif`
+- Redis: no password in local Docker Compose
 - Keycloak admin: `admin / admin`
 - Seeded Keycloak app user: `platform-admin / platform-admin`
 - Grafana: `admin / admin`
@@ -105,6 +107,7 @@ The local profile uses:
 
 - PostgreSQL on `localhost:5432`
 - RabbitMQ on `localhost:5672`
+- Redis on `localhost:6379`
 - MailHog SMTP on `localhost:1025`
 - Keycloak issuer `http://localhost:8081/realms/NotificationPlatforAdmins`
 
@@ -135,6 +138,7 @@ npm run dev
 
 - `postgres`
 - `rabbitmq`
+- `redis`
 - `mailhog`
 - `keycloak`
 - `prometheus`
@@ -258,6 +262,14 @@ For testing, `webhook.site` works well with:
 Authentication:
 
 - header `X-API-Key: <tenant plaintext key>`
+
+Rate limiting:
+
+- `POST /ingest` is rate-limited per API key with a Redis-backed token bucket.
+- Default local limit: `100` requests per `60s`.
+- Rejected requests return `429 Too Many Requests`.
+- Responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`.
+- Rejected responses also include `Retry-After`.
 
 Example request:
 

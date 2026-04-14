@@ -47,6 +47,19 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -67,6 +80,7 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+      - redis
       - mailhog
 
   mailhog:
@@ -105,4 +119,5 @@ services:
 volumes:
   pgdata:
   keycloak_pgdata:
+  redis_data:
   grafana_data:
