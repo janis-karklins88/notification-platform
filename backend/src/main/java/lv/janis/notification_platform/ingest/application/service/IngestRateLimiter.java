@@ -18,6 +18,7 @@ public class IngestRateLimiter {
   private static final Logger log = LoggerFactory.getLogger(IngestRateLimiter.class);
   private static final String KEY_PREFIX = "rate-limit:ingest:api-key:";
 
+  @SuppressWarnings("rawtypes")
   private static final DefaultRedisScript<List> TOKEN_BUCKET_SCRIPT = new DefaultRedisScript<>("""
       local capacity = tonumber(ARGV[1])
       local refill_window_ms = tonumber(ARGV[2])
