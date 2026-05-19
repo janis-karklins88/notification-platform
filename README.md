@@ -1,5 +1,7 @@
 # Notification Platform
 
+[![CI](https://github.com/janis-karklins88/notification-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/janis-karklins88/notification-platform/actions/workflows/ci.yml)
+
 Multi-tenant event-driven notification platform built with Spring Boot, RabbitMQ, PostgreSQL, Redis, React, and Keycloak.
 
 It accepts events through an ingest API, routes them through tenant subscriptions, and delivers them through tenant-owned endpoints such as email and webhooks.
